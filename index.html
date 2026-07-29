@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- MACROXEL SALIDAS v1.0.23 · Archivo autónomo para GitHub Pages: CPM y logotipo integrados -->
+<!-- MACROXEL SALIDAS v1.0.24 · Archivo autónomo para GitHub Pages: CPM y logotipo integrados -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MACROXEL Transferencias v1.0.23</title>
+<title>MACROXEL Transferencias v1.0.24</title>
 <!-- CPM predeterminado integrado: archivo autónomo para GitHub Pages -->
 <script id="mx-cpm-default-integrado">
 window.MX_DEFAULT_CPM_VERSION="1895E660C985D879";
@@ -454,7 +454,7 @@ th{font-size:10px;}
   const txt=v=>String(v==null?'':v).trim();
   const norm=v=>txt(v).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const esc=v=>txt(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  let authPromise=null,adminCache={at:0,value:false},uiTimer=0;
+  let authPromise=null,setupPromise=null,lastSetupAt=0,adminCache={at:0,value:false};
 
   function simpleHash(v){let h=2166136261,s=txt(v);for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16);}
   function normalizeDb(v){return txt(v).replace(/\.json\/?$/i,'').replace(/\/+$/,'');}
@@ -488,7 +488,7 @@ th{font-size:10px;}
   async function ensureAuth(force=false){
     if(!force&&authPromise)return authPromise;
     const task=(async()=>{const apiKey=getApiKey();if(!apiKey)throw new Error('Configura la Clave Web API de Firebase desde el botón ? o Seguridad Firebase.');let s=readSession();if(!force&&s?.idToken&&s?.localId&&Number(s.expiresAt)>Date.now()+30000)return s;try{if(s?.refreshToken)return await refreshSession(apiKey,s);}catch(_e){clearSession();}return signUpAnonymous(apiKey);})();
-    authPromise=task;try{const s=await task;setTimeout(()=>postAuthSetup().catch(()=>{}),0);return s;}finally{authPromise=null;}
+    authPromise=task;try{return await task;}finally{authPromise=null;}
   }
   function targetDb(url){try{const c=getCfg(),base=normalizeDb(c.db);if(!base)return false;const a=new URL(url,location.href),b=new URL(base);return a.origin===b.origin&&a.pathname.startsWith(b.pathname.replace(/\/+$/,'')+'/');}catch(_e){return false;}}
   function isDbRest(url){try{const u=new URL(url,location.href);return /\.(firebaseio\.com|firebasedatabase\.app)$/i.test(u.hostname)&&/\.json$/i.test(u.pathname);}catch(_e){return false;}}
@@ -526,7 +526,14 @@ th{font-size:10px;}
   }
   async function requestAdminAccess(){if(OPT.role!=='admin')return false;const c=getCfg(),s=await ensureAuth(false),path='/firebase_admin_requests/'+encodeURIComponent(s.localId);const payload={uid:s.localId,status:'pending',active:false,appCode:OPT.appCode,appName:OPT.appName,branch:c.branch,deviceId:getDeviceId(),requestedAt:new Date().toISOString(),lastSeenAt:new Date().toISOString(),userAgent:navigator.userAgent||''};try{await rawDb(path,'PUT',payload);return true;}catch(_e){return false;}}
   async function isAdmin(force=false){const s=await ensureAuth(false);if(!force&&Date.now()-adminCache.at<60000)return adminCache.value;let rec=null;try{rec=await rawDb('/firebase_admins/'+encodeURIComponent(s.localId),'GET');}catch(_e){}const ok=!!(rec&&rec.active===true);adminCache={at:Date.now(),value:ok};return ok;}
-  async function postAuthSetup(){try{if(OPT.role==='viewer')await syncViewerAuthorization();else{const ok=await isAdmin(true);if(!ok)await requestAdminAccess();}renderSecurityState();}catch(_e){renderSecurityState();}}
+  async function postAuthSetup(force=false){
+    if(navigator.onLine===false||document.hidden)return false;
+    if(setupPromise)return setupPromise;
+    const now=Date.now();
+    if(!force&&now-lastSetupAt<120000)return true;
+    setupPromise=(async()=>{try{if(OPT.role==='admin'){const ok=await isAdmin(false);if(!ok)await requestAdminAccess();}await renderSecurityState();lastSetupAt=Date.now();return true;}catch(_e){return false;}})();
+    try{return await setupPromise;}finally{setupPromise=null;}
+  }
   function panelHtml(){return `<div class="mx-fba-panel" id="mxFirebaseSecurityPanel"><div class="mx-fba-title">🔐 Autenticación segura por dispositivo</div><div class="mx-fba-help">La cuenta anónima identifica este equipo. Las enfermeras continúan usando el acceso normal del visor; no necesitan cuentas de Firebase.</div><label>Clave Web API del proyecto Firebase</label><div class="mx-fba-line"><input id="mxFirebaseApiKey" type="password" autocomplete="off" placeholder="AIza..."><button type="button" id="mxFirebaseToggleKey" title="Mostrar u ocultar">👁</button></div><div class="mx-fba-actions"><button type="button" id="mxFirebaseSaveKey">Guardar y autenticar</button><button type="button" id="mxFirebaseRefreshAuth">Revisar acceso</button><button type="button" id="mxFirebaseCopyUid">Copiar UID</button></div><div class="mx-fba-status" id="mxFirebaseAuthStatus">Sin comprobar.</div><div class="mx-fba-admin" id="mxFirebaseAdminArea"></div></div>`;}
   function attachPanel(){
     let host=document.querySelector('#mxUrlManagerOverlay .mx-url-body');
@@ -537,12 +544,12 @@ th{font-size:10px;}
   function bindPanel(){const key=document.getElementById('mxFirebaseApiKey');if(!key)return;key.value=getApiKey();document.getElementById('mxFirebaseToggleKey').onclick=()=>{key.type=key.type==='password'?'text':'password';};document.getElementById('mxFirebaseSaveKey').onclick=async()=>{const val=txt(key.value);if(!val){setPanelStatus('Captura la Clave Web API.','bad');return;}setApiKey(val);setPanelStatus('Autenticando dispositivo...','');try{await ensureAuth(true);await postAuthSetup();setPanelStatus('Dispositivo autenticado correctamente.','ok');}catch(e){setPanelStatus(e.message||String(e),'bad');}};document.getElementById('mxFirebaseRefreshAuth').onclick=async()=>{setPanelStatus('Comprobando...','');try{await ensureAuth(false);await postAuthSetup();}catch(e){setPanelStatus(e.message||String(e),'bad');}};document.getElementById('mxFirebaseCopyUid').onclick=async()=>{try{const uid=(await ensureAuth(false)).localId;await navigator.clipboard?.writeText(uid);setPanelStatus('UID copiado: '+uid,'ok');}catch(e){setPanelStatus(e.message||String(e),'bad');}};renderSecurityState();}
   function setPanelStatus(msg,tone=''){const el=document.getElementById('mxFirebaseAuthStatus');if(!el)return;el.className='mx-fba-status'+(tone?' '+tone:'');el.textContent=msg;}
   async function approveAdmin(uid,active){try{await rawDb('/firebase_admins/'+encodeURIComponent(uid),active?'PUT':'DELETE',active?{active:true,role:'controller',approvedAt:new Date().toISOString(),approvedBy:(await ensureAuth()).localId}:null);if(active)await rawDb('/firebase_admin_requests/'+encodeURIComponent(uid),'PATCH',{status:'approved',active:true,approvedAt:new Date().toISOString()});await renderAdminRequests();}catch(e){setPanelStatus(e.message||String(e),'bad');}}
-  async function renderAdminRequests(){const area=document.getElementById('mxFirebaseAdminArea');if(!area)return;const admin=await isAdmin(true).catch(()=>false);if(!admin){area.innerHTML='';return;}let rows={};try{rows=await rawDb('/firebase_admin_requests','GET')||{};}catch(_e){}const list=Object.values(rows).filter(Boolean).sort((a,b)=>String(b.requestedAt||'').localeCompare(String(a.requestedAt||''))).slice(0,20);area.innerHTML=`<div class="mx-fba-subtitle">Solicitudes de administradores</div>${list.length?list.map(r=>`<div class="mx-fba-request"><div><b>${esc(r.appName||r.appCode||'Aplicación')}</b><small>${esc(r.uid||'')} · ${esc(r.deviceId||'')}</small></div><button type="button" data-approve="${esc(r.uid||'')}">${r.active?'Reautorizar':'Autorizar'}</button></div>`).join(''):'<small>No hay solicitudes pendientes.</small>'}`;area.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>approveAdmin(b.dataset.approve,true));}
-  async function renderSecurityState(){const el=document.getElementById('mxFirebaseAuthStatus');if(!el)return;const key=getApiKey();if(!key){setPanelStatus('Falta la Clave Web API. Copia la del mismo proyecto de Firebase.','bad');return;}let s;try{s=await ensureAuth(false);}catch(e){setPanelStatus(e.message||String(e),'bad');return;}if(OPT.role==='admin'){const admin=await isAdmin(true).catch(()=>false);setPanelStatus(admin?'✅ Administrador Firebase autorizado · UID '+s.localId:'⏳ UID pendiente de autorizar: '+s.localId,admin?'ok':'warn');if(admin)renderAdminRequests();}else{const linked=await syncViewerAuthorization().catch(()=>false);setPanelStatus((linked?'✅ Dispositivo autenticado y vinculado':'🔒 Autenticado; esperando licencia activa')+' · UID '+s.localId,linked?'ok':'warn');}}
-  function installUi(){if(!document.getElementById('mxFirebaseAuthStyle')){const st=document.createElement('style');st.id='mxFirebaseAuthStyle';st.textContent=`.mx-fba-panel{margin-top:14px;padding:13px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc}.mx-fba-title{font-weight:900;color:#0f2745;margin-bottom:5px}.mx-fba-help{font-size:11px;color:#64748b;line-height:1.4;margin-bottom:9px}.mx-fba-panel label{display:block;font-size:11px;font-weight:850;color:#334155;margin:7px 0 4px}.mx-fba-line{display:flex;gap:6px}.mx-fba-line input{flex:1;min-width:0;height:39px;border:1px solid #cbd5e1;border-radius:9px;padding:8px}.mx-fba-line button{width:42px;min-width:42px}.mx-fba-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.mx-fba-actions button,.mx-fba-request button{width:auto;min-width:0;padding:8px 10px;border:0;border-radius:8px;background:#0b5cab;color:#fff;font-weight:800;cursor:pointer}.mx-fba-status{margin-top:8px;padding:8px;border-radius:8px;background:#eef2ff;font-size:11px;overflow-wrap:anywhere}.mx-fba-status.ok{background:#ecfdf5;color:#166534}.mx-fba-status.warn{background:#fffbeb;color:#92400e}.mx-fba-status.bad{background:#fef2f2;color:#991b1b}.mx-fba-subtitle{font-weight:900;margin:10px 0 5px}.mx-fba-request{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #e2e8f0;padding:7px 0}.mx-fba-request small{display:block;font-size:9px;color:#64748b;overflow-wrap:anywhere}`;document.head.appendChild(st);}attachPanel();const mo=new MutationObserver(()=>{clearTimeout(uiTimer);uiTimer=setTimeout(attachPanel,30);});mo.observe(document.documentElement,{childList:true,subtree:true});}
-  window.MXFirebaseAuth={ensureAuth,getUid:async()=>{const s=await ensureAuth();return s.localId;},getApiKey,setApiKey,clearSession,isAdmin,syncViewerAuthorization,open:()=>{document.getElementById('mxUrlHelpButton')?.click();attachPanel();}};
-  window.addEventListener('online',()=>postAuthSetup().catch(()=>{}));window.addEventListener('mx-viewer-config-changed',()=>{clearSession();setTimeout(()=>renderSecurityState(),100);});window.addEventListener('mx-viewer-licensed',()=>syncViewerAuthorization().catch(()=>{}));setInterval(()=>postAuthSetup().catch(()=>{}),5*60*1000);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installUi();if(getApiKey())ensureAuth().then(postAuthSetup).catch(()=>{});},{once:true});else{installUi();if(getApiKey())ensureAuth().then(postAuthSetup).catch(()=>{});}
+  async function renderAdminRequests(){const area=document.getElementById('mxFirebaseAdminArea');if(!area)return;const admin=await isAdmin(false).catch(()=>false);if(!admin){area.innerHTML='';return;}let rows={};try{rows=await rawDb('/firebase_admin_requests','GET')||{};}catch(_e){}const list=Object.values(rows).filter(Boolean).sort((a,b)=>String(b.requestedAt||'').localeCompare(String(a.requestedAt||''))).slice(0,20);area.innerHTML=`<div class="mx-fba-subtitle">Solicitudes de administradores</div>${list.length?list.map(r=>`<div class="mx-fba-request"><div><b>${esc(r.appName||r.appCode||'Aplicación')}</b><small>${esc(r.uid||'')} · ${esc(r.deviceId||'')}</small></div><button type="button" data-approve="${esc(r.uid||'')}">${r.active?'Reautorizar':'Autorizar'}</button></div>`).join(''):'<small>No hay solicitudes pendientes.</small>'}`;area.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>approveAdmin(b.dataset.approve,true));}
+  async function renderSecurityState(){const el=document.getElementById('mxFirebaseAuthStatus');if(!el)return;const key=getApiKey();if(!key){setPanelStatus('Falta la Clave Web API. Copia la del mismo proyecto de Firebase.','bad');return;}let s;try{s=await ensureAuth(false);}catch(e){setPanelStatus(e.message||String(e),'bad');return;}if(OPT.role==='admin'){const admin=await isAdmin(false).catch(()=>false);setPanelStatus(admin?'✅ Administrador Firebase autorizado · UID '+s.localId:'⏳ UID pendiente de autorizar: '+s.localId,admin?'ok':'warn');if(admin)renderAdminRequests();}else{const linked=await syncViewerAuthorization().catch(()=>false);setPanelStatus((linked?'✅ Dispositivo autenticado y vinculado':'🔒 Autenticado; esperando licencia activa')+' · UID '+s.localId,linked?'ok':'warn');}}
+  function installUi(){if(!document.getElementById('mxFirebaseAuthStyle')){const st=document.createElement('style');st.id='mxFirebaseAuthStyle';st.textContent=`.mx-fba-panel{margin-top:14px;padding:13px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc}.mx-fba-title{font-weight:900;color:#0f2745;margin-bottom:5px}.mx-fba-help{font-size:11px;color:#64748b;line-height:1.4;margin-bottom:9px}.mx-fba-panel label{display:block;font-size:11px;font-weight:850;color:#334155;margin:7px 0 4px}.mx-fba-line{display:flex;gap:6px}.mx-fba-line input{flex:1;min-width:0;height:39px;border:1px solid #cbd5e1;border-radius:9px;padding:8px}.mx-fba-line button{width:42px;min-width:42px}.mx-fba-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.mx-fba-actions button,.mx-fba-request button{width:auto;min-width:0;padding:8px 10px;border:0;border-radius:8px;background:#0b5cab;color:#fff;font-weight:800;cursor:pointer}.mx-fba-status{margin-top:8px;padding:8px;border-radius:8px;background:#eef2ff;font-size:11px;overflow-wrap:anywhere}.mx-fba-status.ok{background:#ecfdf5;color:#166534}.mx-fba-status.warn{background:#fffbeb;color:#92400e}.mx-fba-status.bad{background:#fef2f2;color:#991b1b}.mx-fba-subtitle{font-weight:900;margin:10px 0 5px}.mx-fba-request{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #e2e8f0;padding:7px 0}.mx-fba-request small{display:block;font-size:9px;color:#64748b;overflow-wrap:anywhere}`;document.head.appendChild(st);}attachPanel();}
+  window.MXFirebaseAuth={ensureAuth,getUid:async()=>{const s=await ensureAuth();return s.localId;},getApiKey,setApiKey,clearSession,isAdmin,syncViewerAuthorization,open:()=>{document.getElementById('mxUrlHelpButton')?.click();setTimeout(attachPanel,60);}};
+  window.addEventListener('online',()=>postAuthSetup(true).catch(()=>{}));window.addEventListener('mx-viewer-config-changed',()=>{clearSession();lastSetupAt=0;setTimeout(()=>postAuthSetup(true).catch(()=>{}),250);});window.addEventListener('mx-viewer-licensed',()=>postAuthSetup(true).catch(()=>{}));setInterval(()=>{if(!document.hidden&&navigator.onLine!==false)postAuthSetup(false).catch(()=>{});},15*60*1000);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installUi();if(getApiKey())ensureAuth().then(()=>postAuthSetup(true)).catch(()=>{});},{once:true});else{installUi();if(getApiKey())ensureAuth().then(()=>postAuthSetup(true)).catch(()=>{});}
 })();
 
 </script>
@@ -984,7 +991,7 @@ th{font-size:10px;}
       }
     }finally{responseWatchers.delete(id);}
   }
-  async function pollResponses(){const c=cfg(),rows=loadHistory().filter(r=>['PENDING','PROCESSING','PENDIENTE'].includes(norm(r.status||r.estado))).slice(0,20);for(const r of rows){try{const response=await fetchJson('/transfer_responses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(r.id));if(response?.status){const merged=Object.assign({},r,response,{estado:response.status,requestFolio:r.requestFolio||response.requestFolio});updateHistory(merged);if(norm(response.status)==='APPLIED'){reflectApplied(response);window.dispatchEvent(new CustomEvent('mx-transfer-applied',{detail:response}));loaded=false;if(!$('transferView').classList.contains('mx-hidden'))setTimeout(()=>loadLots(true).catch(()=>{}),180);}}else{const q=await fetchJson('/transfer_requests/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(r.id));if(q?.status)updateHistory(Object.assign({},r,q,{estado:q.status,requestFolio:r.requestFolio||q.requestFolio}));}}catch(_e){}}}
+  async function pollResponses(){if(document.hidden||navigator.onLine===false)return;const c=cfg(),rows=loadHistory().filter(r=>['PENDING','PROCESSING','PENDIENTE'].includes(norm(r.status||r.estado))).slice(0,20);for(const r of rows){try{const response=await fetchJson('/transfer_responses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(r.id));if(response?.status){const merged=Object.assign({},r,response,{estado:response.status,requestFolio:r.requestFolio||response.requestFolio});updateHistory(merged);if(norm(response.status)==='APPLIED'){reflectApplied(response);window.dispatchEvent(new CustomEvent('mx-transfer-applied',{detail:response}));loaded=false;if(!$('transferView').classList.contains('mx-hidden'))setTimeout(()=>loadLots(true).catch(()=>{}),180);}}else{const q=await fetchJson('/transfer_requests/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(r.id));if(q?.status)updateHistory(Object.assign({},r,q,{estado:q.status,requestFolio:r.requestFolio||q.requestFolio}));}}catch(_e){}}}
   async function addPharmacyOrderToCart(order){
     if(direction().code!=='A2E'){if(cart.length)throw new Error('Vacía el carrito antes de agregar un Pedido de farmacia.');$('transferDirection').value='A2E';lastDirection='A2E';updateDirectionUi();}
     await loadLots(false);const clave=norm(order?.clave||order?.c),wanted=Math.max(1,Math.ceil(num(order?.pzsRecomendadas||order?.recommended||order?.pzs)));
@@ -1006,7 +1013,7 @@ th{font-size:10px;}
     try{lastDirection=localStorage.getItem(DIRECTION_KEY)==='E2A'?'E2A':'A2E';}catch(_e){lastDirection='A2E';}if($('transferDirection')){$('transferDirection').value=lastDirection;$('transferDirection').addEventListener('change',e=>{const next=e.currentTarget.value==='E2A'?'E2A':'A2E';if(cart.length&&!confirm('Cambiar el sentido vaciará el carrito actual. ¿Continuar?')){e.currentTarget.value=lastDirection;return;}cart=[];lastDirection=next;updateDirectionUi();setStatus('Sentido actualizado. Busca los productos para el nuevo origen.','ok');});}updateDirectionUi();
     const oldPatients=$('tabPatients').onclick,oldInventory=$('tabInventory').onclick;$('tabPatients').onclick=()=>{$('transferView').classList.add('mx-hidden');$('tabTransfer').classList.remove('active');oldPatients&&oldPatients();};$('tabInventory').onclick=()=>{$('transferView').classList.add('mx-hidden');$('tabTransfer').classList.remove('active');oldInventory&&oldInventory();};$('tabTransfer').onclick=showTransfer;$('transferRequester').value=localStorage.getItem(REQUESTER_KEY)||'';$('transferQ').addEventListener('input',()=>{clearTimeout(searchTimer);searchTimer=setTimeout(renderResults,80);});$('transferQ').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('.transfer-result')?.click();}});$('btnTransferReload').onclick=()=>loadLots(true).catch(e=>{$('transferInventoryStatus').textContent=e.message;});$('btnClearTransferCart').onclick=()=>{cart=[];renderCart();setStatus('Carrito limpio.');};$('btnFinalizeTransfer').onclick=finalize;$('tabTransferHistory').onclick=showTransferHistory;$('btnDeleteTransferHistory').onclick=deleteTransferHistory;$('transferQtyCancel').onclick=closeQty;$('transferQtyAccept').onclick=addSelected;$('transferQtyInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addSelected();}if(e.key==='Escape')closeQty();});$('transferQtyModal').addEventListener('click',e=>{if(e.target===$('transferQtyModal'))closeQty();});
     $('transferLotsClose').onclick=()=>$('transferLotsModal').classList.remove('show');
-    $('transferLotsModal').addEventListener('click',e=>{if(e.target===$('transferLotsModal'))$('transferLotsModal').classList.remove('show');});window.addEventListener('mx-viewer-config-changed',()=>{loaded=false;products=[];cart=[];renderCart();renderHistory();});renderCart();renderHistory();pollResponses();setInterval(pollResponses,1000);}
+    $('transferLotsModal').addEventListener('click',e=>{if(e.target===$('transferLotsModal'))$('transferLotsModal').classList.remove('show');});window.addEventListener('mx-viewer-config-changed',()=>{loaded=false;products=[];cart=[];renderCart();renderHistory();});renderCart();renderHistory();pollResponses();setInterval(pollResponses,10000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
@@ -1017,7 +1024,7 @@ th{font-size:10px;}
   'use strict';
   if(window.__mxViewerActivationV102)return;window.__mxViewerActivationV102=true;
   window.__mxViewerLicensed=false;
-  const APP_CODE='MACROXEL-VISOR', VERSION='1.0.23';
+  const APP_CODE='MACROXEL-VISOR', VERSION='1.0.24';
   const DEVICE_KEY='mx_visor_device_id_v1', LOCAL_LICENSE_KEY='mx_visor_license_cache_v1', CFG_KEY='mx_viewer_transferencias_cfg_v104';
   const $=id=>document.getElementById(id), txt=v=>String(v==null?'':v).trim(), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function hash(value){let h=0x811c9dc5,s=String(value||'');for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0;}return ('00000000'+h.toString(16)).slice(-8).toUpperCase();}
@@ -1053,7 +1060,7 @@ th{font-size:10px;}
   function updateBadge(rec,state='active'){let b=$('viewerLicenseBadge');if(state==='active'){if(b)b.remove();return;}if(!b){const ref=$('btnViewerLogout')||$('mxViewerSessionUser');if(!ref||!ref.parentElement)return;b=document.createElement('button');b.id='viewerLicenseBadge';b.type='button';b.className='mx-viewer-license-badge warn';ref.parentElement.insertBefore(b,ref);}const labels={missing:'🔒 Activar',pending:'⏳ Pendiente',expired:'⚠ Licencia vencida',suspended:'⛔ Licencia suspendida',deleted:'🔒 Activar',error:'⚠ Revisar licencia',offline:'📴 Sin conexión'};b.dataset.licenseState=state;b.classList.add('warn');b.textContent=labels[state]||'⚠ Revisar licencia';b.title='Abrir activación';b.onclick=()=>{ensureGate().classList.remove('mx-hidden');lockActivationForm(false);};}
   async function heartbeat(rec){try{await request(licensePath(),'PATCH',{lastSeenAt:new Date().toISOString(),lastValidatedAt:new Date().toISOString(),version:VERSION});}catch(_e){}}
   async function validate(manual=false){const gate=ensureGate(),btn=$('mxVaValidate');try{btn.disabled=true;if(navigator.onLine===false){if(useCachedLicense('Sin conexión a Internet'))return true;throw new Error('No hay conexión y este dispositivo no tiene una licencia local activa y vigente.');}setState('Validando activación en Firebase...');saveCfg({db:$('mxVaDb').value,branch:$('mxVaBranch').value},false);const rec=await request(licensePath(),'GET');fillRecord(rec);const state=effectiveState(rec);if(state==='active'){window.__mxViewerLicensed=true;const cached=writeCachedLicense(Object.assign({},rec,{lastValidatedAt:new Date().toISOString(),offline:false}));lockActivationForm(true);gate.classList.add('mx-hidden');updateBadge(cached,'active');heartbeat(rec);window.dispatchEvent(new CustomEvent('mx-viewer-licensed',{detail:cached}));setTimeout(()=>{try{$('btnTransferReload')?.click();}catch(_e){}},80);return true;}window.__mxViewerLicensed=false;localStorage.removeItem(LOCAL_LICENSE_KEY);lockActivationForm(false);gate.classList.remove('mx-hidden');updateBadge(rec,state);if(state==='missing'){setState('Este dispositivo todavía no está registrado. Completa tus datos y envía la solicitud.','bad');$('mxVaSubmit').textContent='Enviar solicitud';}else if(state==='pending'){setState('Solicitud en espera de activación. Después de autorizarla en MACROXEL, presiona “Validar activación”.','pending');$('mxVaSubmit').textContent='Actualizar solicitud';}else if(state==='expired'){setState('La activación venció el '+fmt(rec.expiresAt||rec.vence||rec.expiry)+'. Puedes solicitar una renovación.','bad');$('mxVaSubmit').textContent='Solicitar renovación';}else if(state==='suspended'){setState('El acceso fue suspendido o cancelado. Contacta al administrador o solicita reactivación.','bad');$('mxVaSubmit').textContent='Solicitar reactivación';}else if(state==='deleted'){setState('El registro fue eliminado. Envía una nueva solicitud para este dispositivo.','bad');$('mxVaSubmit').textContent='Enviar nueva solicitud';}return false;}catch(e){if(useCachedLicense(e.message||String(e)))return true;window.__mxViewerLicensed=false;lockActivationForm(false);gate.classList.remove('mx-hidden');updateBadge(null,'error');setState('No fue posible validar Firebase y no hay una licencia local vigente: '+(e.message||e),'bad');return false;}finally{lockActivationForm(window.__mxViewerLicensed===true);}}
-    function init(){ensureGate();validate(false);setInterval(()=>validate(false),5*60*1000);window.addEventListener('online',()=>validate(false));window.addEventListener('offline',()=>validate(false));window.addEventListener('mx-viewer-config-changed',()=>{window.__mxViewerLicensed=false;localStorage.removeItem(LOCAL_LICENSE_KEY);ensureGate().classList.remove('mx-hidden');const c=cfg();$('mxVaDb').value=c.db;$('mxVaBranch').value=c.branch;validate(false);});}
+    function init(){ensureGate();validate(false);setInterval(()=>{if(!document.hidden&&navigator.onLine!==false)validate(false)},15*60*1000);window.addEventListener('online',()=>validate(false));window.addEventListener('offline',()=>validate(false));window.addEventListener('mx-viewer-config-changed',()=>{window.__mxViewerLicensed=false;localStorage.removeItem(LOCAL_LICENSE_KEY);ensureGate().classList.remove('mx-hidden');const c=cfg();$('mxVaDb').value=c.db;$('mxVaBranch').value=c.branch;validate(false);});}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
 </script>
@@ -1141,7 +1148,7 @@ th{font-size:10px;}
     $('tabPharmacyOrders').onclick=show;$('btnPoReload').onclick=()=>load(true);$('poSearch').oninput=render;$('btnPoClearFilter').onclick=()=>{$('poSearch').value='';render();};$('btnPoAddAll').onclick=addAll;
     const tr=$('tabTransfer'),old=tr.onclick;tr.onclick=function(e){$('pharmacyOrdersView').classList.add('mx-hidden');$('transferHistoryView')?.classList.add('mx-hidden');$('tabPharmacyOrders').classList.remove('active');$('tabTransferHistory')?.classList.remove('active');return old?.call(this,e);};
     window.addEventListener('mx-viewer-config-changed',()=>{loaded=false;rows=[];render();});window.addEventListener('mx-transfer-applied',()=>{loaded=false;load(true).catch(()=>{});});
-    timer=setInterval(()=>{if(!$('pharmacyOrdersView').classList.contains('mx-hidden'))load(false);},4000);
+    timer=setInterval(()=>{if(!document.hidden&&navigator.onLine!==false&&!$('pharmacyOrdersView').classList.contains('mx-hidden'))load(false);},30000);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
@@ -1182,6 +1189,7 @@ th{font-size:10px;}
     try{ localStorage.setItem(SEEN_KEY,String(marker?.seq||marker?.resetAt||Date.now())); }catch(_e){}
   }
   async function check(){
+    if(document.hidden||navigator.onLine===false)return;
     try{
       const marker=await readMarker(); if(!marker) return;
       const id=String(marker.seq||marker.resetAt||''); if(!id) return;
@@ -1194,7 +1202,7 @@ th{font-size:10px;}
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',()=>setTimeout(check,500),{once:true});
   else setTimeout(check,500);
-  setInterval(check,15000);
+  setInterval(check,120000);
 })();
 </script>
 
@@ -1287,25 +1295,22 @@ th{font-size:10px;}
 })();
 </script>
 
-<script id="mx-viewer-auto-refresh-v112">
+<script id="mx-viewer-auto-refresh-v124">
 (function(){
   'use strict';
-  if(window.__mxViewerAutoRefreshV112)return;window.__mxViewerAutoRefreshV112=true;
-  let timer=0,lastRun=0,observer=null,lastBlocked=true;
+  if(window.__mxViewerAutoRefreshV124)return;window.__mxViewerAutoRefreshV124=true;
+  let timer=0,lastRun=0,firstRun=true;
   const $=id=>document.getElementById(id);
   function visible(el){if(!el||!el.isConnected)return false;for(let n=el;n&&n!==document.documentElement;n=n.parentElement){if(n.hidden)return false;const s=getComputedStyle(n);if(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0)return false;}return true;}
-  function blocked(){if(window.__mxViewerLicensed===false)return true;const gates=['#loginGate','#activationGate','#mxViewerSalidaAuth','#mxViewerActivationGate','.gate:not(.hidden)'];return gates.some(sel=>[...document.querySelectorAll(sel)].some(visible));}
-  function buttonIds(){if($('btnTransferReload'))return['btnTransferReload','btnInventoryReload','btnPoReload'];if($('patientReload'))return[];if($('refreshPatients'))return[];if($('btnReload'))return['btnReload','btnInventoryReload'];return[];}
-  function run(reason,force=false){clearTimeout(timer);timer=setTimeout(()=>{if(blocked())return;const now=Date.now();if(!force&&now-lastRun<2500)return;lastRun=now;window.dispatchEvent(new CustomEvent('mx-viewer-refresh-now',{detail:{reason,at:new Date().toISOString()}}));for(const id of buttonIds()){const b=$(id);if(b&&!b.disabled){try{b.click();}catch(_e){}}}},180);}
-  function schedule(reason,force=false){run(reason,force);}
-  function init(){lastBlocked=blocked();schedule('apertura',true);setTimeout(()=>schedule('apertura-confirmacion',true),900);setTimeout(()=>schedule('apertura-confirmacion-2'),2200);observer=new MutationObserver(()=>{const current=blocked();if(lastBlocked&&!current)schedule('acceso-listo',true);lastBlocked=current;});observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style','hidden']});for(const id of ['loginBtn','mxVsaLogin','btnLogin','actValidate','mxVaValidate']){$(id)?.addEventListener('click',()=>setTimeout(()=>schedule('acceso',true),700));}}
+  function blocked(){if(document.hidden||navigator.onLine===false||window.__mxViewerLicensed===false)return true;const gates=['#loginGate','#activationGate','#mxViewerSalidaAuth','#mxViewerActivationGate','.gate:not(.hidden)'];return gates.some(sel=>[...document.querySelectorAll(sel)].some(visible));}
+  function buttonIds(){if($('btnTransferReload'))return['btnTransferReload'];if($('patientReload'))return[];if($('refreshPatients'))return[];if($('btnReload'))return['btnReload'];return[];}
+  function run(reason,force=false){clearTimeout(timer);timer=setTimeout(()=>{if(blocked())return;const now=Date.now(),gap=firstRun?0:(force?12000:60000);if(now-lastRun<gap)return;firstRun=false;lastRun=now;window.dispatchEvent(new CustomEvent('mx-viewer-refresh-now',{detail:{reason,at:new Date().toISOString()}}));for(const id of buttonIds()){const b=$(id);if(b&&!b.disabled){try{b.click();}catch(_e){}}}},350);}
+  function init(){run('apertura',true);for(const id of ['loginBtn','mxVsaLogin','btnLogin','actValidate','mxVaValidate'])$(id)?.addEventListener('click',()=>setTimeout(()=>run('acceso',true),900));}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-  window.addEventListener('load',()=>schedule('carga-completa',true),{once:true});
-  window.addEventListener('pageshow',()=>schedule('apertura-pagina',true));
-  window.addEventListener('mx-viewer-licensed',()=>schedule('licencia-validada',true));
-  window.addEventListener('online',()=>schedule('conexion-restablecida',true));
-  window.addEventListener('focus',()=>schedule('ventana-activa'));
-  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')schedule('visor-visible');});
+  window.addEventListener('mx-viewer-licensed',()=>run('licencia-validada',true));
+  window.addEventListener('online',()=>run('conexion-restablecida',true));
+  window.addEventListener('focus',()=>run('ventana-activa',false));
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')run('visor-visible',false);});
 })();
 </script>
 </body></html>
