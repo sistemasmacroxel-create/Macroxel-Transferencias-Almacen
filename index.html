@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- MACROXEL SALIDAS v1.0.22 · Archivo autónomo para GitHub Pages: CPM y logotipo integrados -->
+<!-- MACROXEL SALIDAS v1.0.23 · Archivo autónomo para GitHub Pages: CPM y logotipo integrados -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MACROXEL Transferencias v1.0.22</title>
+<title>MACROXEL Transferencias v1.0.23</title>
 <!-- CPM predeterminado integrado: archivo autónomo para GitHub Pages -->
 <script id="mx-cpm-default-integrado">
 window.MX_DEFAULT_CPM_VERSION="1895E660C985D879";
@@ -442,6 +442,110 @@ th{font-size:10px;}
   .po-rec{font-size:16px}
 }
 </style>
+<script id="mx-firebase-auth-v1023">
+
+(function(){
+  'use strict';
+  if(window.__mxFirebaseAuthV1023)return;window.__mxFirebaseAuthV1023=true;
+  const OPT=Object.freeze({"appCode":"TRANSFERENCIAS","appName":"MACROXEL Transferencias","role":"viewer","deviceKeys":["mx_visor_device_id_v1"],"cfgKeys":["mx_viewer_transferencias_cfg_v104"],"defaultDb":"https://sistemas-macroxel-default-rtdb.firebaseio.com","licenseKeyMode":"plain"});
+  const API_KEY_STORAGE='mx_firebase_web_api_key_v1023';
+  const AUTH_PREFIX='mx_firebase_auth_session_v1023_';
+  const NATIVE_FETCH=window.fetch.bind(window);
+  const txt=v=>String(v==null?'':v).trim();
+  const norm=v=>txt(v).toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const esc=v=>txt(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+  let authPromise=null,adminCache={at:0,value:false},uiTimer=0;
+
+  function simpleHash(v){let h=2166136261,s=txt(v);for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return (h>>>0).toString(16);}
+  function normalizeDb(v){return txt(v).replace(/\.json\/?$/i,'').replace(/\/+$/,'');}
+  function readJson(key,fallback=null){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback;}catch(_e){return fallback;}}
+  function writeJson(key,value){try{localStorage.setItem(key,JSON.stringify(value));}catch(_e){}}
+  function getApiKey(){try{return txt(localStorage.getItem(API_KEY_STORAGE)||window.MX_FIREBASE_WEB_API_KEY||'');}catch(_e){return txt(window.MX_FIREBASE_WEB_API_KEY||'');}}
+  function setApiKey(v){const clean=txt(v);try{if(clean)localStorage.setItem(API_KEY_STORAGE,clean);else localStorage.removeItem(API_KEY_STORAGE);}catch(_e){}clearSession();return clean;}
+  function getCfg(){
+    try{if(typeof window.mxViewerGetCfg==='function'){const c=window.mxViewerGetCfg();if(c&&c.db)return{db:normalizeDb(c.db),branch:norm(c.branch||'HGAM')||'HGAM'};}}catch(_e){}
+    try{if(typeof window.mxRemoteDbUrl==='function'){const db=normalizeDb(window.mxRemoteDbUrl());if(db)return{db,branch:(typeof window.mxGetEcosystemStoreId==='function'?norm(window.mxGetEcosystemStoreId()):'HGAM')||'HGAM'};}}catch(_e){}
+    for(const key of (OPT.cfgKeys||[])){
+      try{const raw=localStorage.getItem(key);if(!raw)continue;const c=JSON.parse(raw);if(c&&c.db)return{db:normalizeDb(c.db),branch:norm(c.branch||'HGAM')||'HGAM'};}catch(_e){}
+    }
+    try{const db=normalizeDb(localStorage.getItem(OPT.dbKey||'')||OPT.defaultDb||'');const branch=norm(localStorage.getItem(OPT.branchKey||'')||'HGAM')||'HGAM';return{db,branch};}catch(_e){return{db:normalizeDb(OPT.defaultDb||''),branch:'HGAM'};}
+  }
+  function getDeviceId(){
+    for(const key of (OPT.deviceKeys||[])){try{const v=txt(localStorage.getItem(key));if(v)return v;}catch(_e){}}
+    const key=OPT.generatedDeviceKey||('mx_security_device_'+OPT.appCode.toLowerCase());
+    let id='';try{id=txt(localStorage.getItem(key));}catch(_e){}
+    if(!id){const rnd=(crypto&&crypto.randomUUID)?crypto.randomUUID():Date.now()+'-'+Math.random();id='MX-'+OPT.appCode+'-'+simpleHash(rnd+'|'+navigator.userAgent).toUpperCase();try{localStorage.setItem(key,id);}catch(_e){}}
+    return id;
+  }
+  function licenseDeviceKey(){const id=getDeviceId();if(OPT.licenseKeyMode==='base64lower'){try{return btoa(unescape(encodeURIComponent(id.toLowerCase()))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}catch(_e){}}return id.replace(/[.#$\[\]\/]/g,'_');}
+  function authStorageKey(){return AUTH_PREFIX+simpleHash(getApiKey());}
+  function readSession(){return readJson(authStorageKey(),null);}
+  function saveSession(s){writeJson(authStorageKey(),s);return s;}
+  function clearSession(){try{Object.keys(localStorage).filter(k=>k.startsWith(AUTH_PREFIX)).forEach(k=>localStorage.removeItem(k));}catch(_e){}authPromise=null;adminCache={at:0,value:false};}
+  function authErrorMessage(payload,status){const code=payload?.error?.message||payload?.error||('HTTP '+status);if(String(code).includes('OPERATION_NOT_ALLOWED'))return'Activa el proveedor Anónimo en Firebase Authentication → Sign-in method.';if(String(code).includes('API_KEY_INVALID'))return'La Clave Web API no corresponde al proyecto de Firebase.';if(String(code).includes('TOO_MANY_ATTEMPTS'))return'Firebase bloqueó temporalmente demasiados intentos. Espera unos minutos.';return String(code);}
+  async function signUpAnonymous(apiKey){const r=await NATIVE_FETCH('https://identitytoolkit.googleapis.com/v1/accounts:signUp?key='+encodeURIComponent(apiKey),{method:'POST',headers:{'Content-Type':'application/json'},body:'{"returnSecureToken":true}'});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(authErrorMessage(data,r.status));const now=Date.now();return saveSession({idToken:data.idToken,refreshToken:data.refreshToken,localId:data.localId,expiresAt:now+(Number(data.expiresIn||3600)*1000)-120000,createdAt:new Date(now).toISOString(),appCode:OPT.appCode});}
+  async function refreshSession(apiKey,s){const body='grant_type=refresh_token&refresh_token='+encodeURIComponent(s.refreshToken||'');const r=await NATIVE_FETCH('https://securetoken.googleapis.com/v1/token?key='+encodeURIComponent(apiKey),{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(authErrorMessage(data,r.status));const now=Date.now();return saveSession({idToken:data.id_token,refreshToken:data.refresh_token||s.refreshToken,localId:data.user_id||s.localId,expiresAt:now+(Number(data.expires_in||3600)*1000)-120000,createdAt:s.createdAt||new Date(now).toISOString(),refreshedAt:new Date(now).toISOString(),appCode:OPT.appCode});}
+  async function ensureAuth(force=false){
+    if(!force&&authPromise)return authPromise;
+    const task=(async()=>{const apiKey=getApiKey();if(!apiKey)throw new Error('Configura la Clave Web API de Firebase desde el botón ? o Seguridad Firebase.');let s=readSession();if(!force&&s?.idToken&&s?.localId&&Number(s.expiresAt)>Date.now()+30000)return s;try{if(s?.refreshToken)return await refreshSession(apiKey,s);}catch(_e){clearSession();}return signUpAnonymous(apiKey);})();
+    authPromise=task;try{const s=await task;setTimeout(()=>postAuthSetup().catch(()=>{}),0);return s;}finally{authPromise=null;}
+  }
+  function targetDb(url){try{const c=getCfg(),base=normalizeDb(c.db);if(!base)return false;const a=new URL(url,location.href),b=new URL(base);return a.origin===b.origin&&a.pathname.startsWith(b.pathname.replace(/\/+$/,'')+'/');}catch(_e){return false;}}
+  function isDbRest(url){try{const u=new URL(url,location.href);return /\.(firebaseio\.com|firebasedatabase\.app)$/i.test(u.hostname)&&/\.json$/i.test(u.pathname);}catch(_e){return false;}}
+  function addAuthToUrl(url,token){const u=new URL(url,location.href);u.searchParams.set('auth',token);return u.toString();}
+  function parseBody(body){if(typeof body!=='string')return null;try{return JSON.parse(body);}catch(_e){return null;}}
+  function pathInfo(url){try{const u=new URL(url,location.href);return decodeURIComponent(u.pathname.replace(/\.json$/i,''));}catch(_e){return'';}}
+  function addSecurityMetadata(url,init,session){
+    const method=txt(init?.method||'GET').toUpperCase();if(!['PUT','PATCH','POST'].includes(method))return init||{};
+    const path=pathInfo(url),body=parseBody(init?.body);if(!body||typeof body!=='object'||Array.isArray(body))return init||{};
+    let changed=false;
+    if(/\/viewer_licenses\//.test(path)){
+      if(OPT.role==='viewer'){body.authUid=session.localId;body.authProvider='anonymous';body.securityAppCode=OPT.appCode;body.securityAppName=OPT.appName;body.deviceKey=body.deviceKey||path.split('/').filter(Boolean).pop();body.authLinkedAt=body.authLinkedAt||new Date().toISOString();}
+      else{body.securityApprovedBy=body.securityApprovedBy||session.localId;body.securityApprovedAt=body.securityApprovedAt||new Date().toISOString();}
+      const exp=Date.parse(body.expiresAt||body.vence||body.expiry||'');if(Number.isFinite(exp))body.expiresTs=exp;changed=true;
+    }else if(/\/viewer_license_history\//.test(path)){
+      if(OPT.role==='viewer'){body.authUid=session.localId;body.securityAppCode=OPT.appCode;body.securityAppName=OPT.appName;}else{body.securityApprovedBy=body.securityApprovedBy||session.localId;}changed=true;
+    }
+    if(!changed)return init||{};return Object.assign({},init||{},{headers:Object.assign({},init?.headers||{}, {'Content-Type':'application/json'}),body:JSON.stringify(body)});
+  }
+  window.fetch=async function(input,init){
+    const originalUrl=typeof input==='string'?input:(input instanceof URL?input.toString():input?.url||'');
+    if(!originalUrl||!isDbRest(originalUrl)||!targetDb(originalUrl))return NATIVE_FETCH(input,init);
+    const session=await ensureAuth(false);const securedUrl=addAuthToUrl(originalUrl,session.idToken);const securedInit=addSecurityMetadata(originalUrl,init||{},session);
+    return NATIVE_FETCH(securedUrl,securedInit);
+  };
+  async function rawDb(path,method='GET',body=null){const c=getCfg();if(!c.db)throw new Error('Configura la URL de Firebase.');const s=await ensureAuth(false);const p=String(path||'').startsWith('/')?String(path):'/'+String(path||'');const u=new URL(normalizeDb(c.db)+p+(p.endsWith('.json')?'':'.json'));u.searchParams.set('auth',s.idToken);if(method==='GET')u.searchParams.set('ts',String(Date.now()));const opt={method,cache:'no-store'};if(body!==null){opt.headers={'Content-Type':'application/json'};opt.body=JSON.stringify(body);}const r=await NATIVE_FETCH(u.toString(),opt);const data=await r.json().catch(()=>null);if(!r.ok)throw new Error('Firebase HTTP '+r.status+(data?.error?' · '+data.error:''));return data;}
+  function activeLicense(rec){if(!rec||rec.active===false)return false;const st=norm(rec.status||rec.estado||'');if(['SUSPENDED','SUSPENDIDA','REVOKED','REVOCADA','CANCELLED','CANCELED','CANCELADA','EXPIRED','CADUCADA','VENCIDA','DELETED','ELIMINADA','INACTIVE','INACTIVA'].includes(st))return false;if(!(rec.active===true||['ACTIVE','ACTIVA','ACTIVO','VIGENTE','ENABLED'].includes(st)))return false;const exp=Number(rec.expiresTs)||Date.parse(rec.expiresAt||rec.vence||rec.expiry||'');return Number.isFinite(exp)&&exp>Date.now();}
+  async function syncViewerAuthorization(){
+    if(OPT.role!=='viewer')return false;const c=getCfg(),s=await ensureAuth(false),deviceKey=licenseDeviceKey(),path='/viewer_licenses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(deviceKey);let rec=null;try{rec=await rawDb(path,'GET');}catch(e){return false;}if(!rec)return false;
+    const exp=Number(rec.expiresTs)||Date.parse(rec.expiresAt||rec.vence||rec.expiry||'');const patch={authUid:s.localId,authProvider:'anonymous',securityAppCode:OPT.appCode,securityAppName:OPT.appName,deviceKey,authLinkedAt:rec.authLinkedAt||new Date().toISOString()};if(Number.isFinite(exp))patch.expiresTs=exp;
+    try{await rawDb(path,'PATCH',patch);}catch(_e){}
+    const authPath='/authorized_devices/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(s.localId);
+    if(activeLicense(Object.assign({},rec,patch))){const payload={active:true,authUid:s.localId,branch:c.branch,deviceId:getDeviceId(),deviceKey,appCode:OPT.appCode,appName:OPT.appName,expiresTs:Number(exp)||0,expiresAt:rec.expiresAt||rec.vence||rec.expiry||'',linkedAt:new Date().toISOString(),lastSeenAt:new Date().toISOString()};try{await rawDb(authPath,'PUT',payload);return true;}catch(_e){return false;}}
+    try{await rawDb(authPath,'DELETE');}catch(_e){}return false;
+  }
+  async function requestAdminAccess(){if(OPT.role!=='admin')return false;const c=getCfg(),s=await ensureAuth(false),path='/firebase_admin_requests/'+encodeURIComponent(s.localId);const payload={uid:s.localId,status:'pending',active:false,appCode:OPT.appCode,appName:OPT.appName,branch:c.branch,deviceId:getDeviceId(),requestedAt:new Date().toISOString(),lastSeenAt:new Date().toISOString(),userAgent:navigator.userAgent||''};try{await rawDb(path,'PUT',payload);return true;}catch(_e){return false;}}
+  async function isAdmin(force=false){const s=await ensureAuth(false);if(!force&&Date.now()-adminCache.at<60000)return adminCache.value;let rec=null;try{rec=await rawDb('/firebase_admins/'+encodeURIComponent(s.localId),'GET');}catch(_e){}const ok=!!(rec&&rec.active===true);adminCache={at:Date.now(),value:ok};return ok;}
+  async function postAuthSetup(){try{if(OPT.role==='viewer')await syncViewerAuthorization();else{const ok=await isAdmin(true);if(!ok)await requestAdminAccess();}renderSecurityState();}catch(_e){renderSecurityState();}}
+  function panelHtml(){return `<div class="mx-fba-panel" id="mxFirebaseSecurityPanel"><div class="mx-fba-title">🔐 Autenticación segura por dispositivo</div><div class="mx-fba-help">La cuenta anónima identifica este equipo. Las enfermeras continúan usando el acceso normal del visor; no necesitan cuentas de Firebase.</div><label>Clave Web API del proyecto Firebase</label><div class="mx-fba-line"><input id="mxFirebaseApiKey" type="password" autocomplete="off" placeholder="AIza..."><button type="button" id="mxFirebaseToggleKey" title="Mostrar u ocultar">👁</button></div><div class="mx-fba-actions"><button type="button" id="mxFirebaseSaveKey">Guardar y autenticar</button><button type="button" id="mxFirebaseRefreshAuth">Revisar acceso</button><button type="button" id="mxFirebaseCopyUid">Copiar UID</button></div><div class="mx-fba-status" id="mxFirebaseAuthStatus">Sin comprobar.</div><div class="mx-fba-admin" id="mxFirebaseAdminArea"></div></div>`;}
+  function attachPanel(){
+    let host=document.querySelector('#mxUrlManagerOverlay .mx-url-body');
+    if(!host&&OPT.role==='admin')host=document.querySelector(OPT.inlineAnchor||'#dbUrlInput')?.parentElement;
+    if(!host||host.querySelector('#mxFirebaseSecurityPanel'))return;
+    host.insertAdjacentHTML('beforeend',panelHtml());bindPanel();
+  }
+  function bindPanel(){const key=document.getElementById('mxFirebaseApiKey');if(!key)return;key.value=getApiKey();document.getElementById('mxFirebaseToggleKey').onclick=()=>{key.type=key.type==='password'?'text':'password';};document.getElementById('mxFirebaseSaveKey').onclick=async()=>{const val=txt(key.value);if(!val){setPanelStatus('Captura la Clave Web API.','bad');return;}setApiKey(val);setPanelStatus('Autenticando dispositivo...','');try{await ensureAuth(true);await postAuthSetup();setPanelStatus('Dispositivo autenticado correctamente.','ok');}catch(e){setPanelStatus(e.message||String(e),'bad');}};document.getElementById('mxFirebaseRefreshAuth').onclick=async()=>{setPanelStatus('Comprobando...','');try{await ensureAuth(false);await postAuthSetup();}catch(e){setPanelStatus(e.message||String(e),'bad');}};document.getElementById('mxFirebaseCopyUid').onclick=async()=>{try{const uid=(await ensureAuth(false)).localId;await navigator.clipboard?.writeText(uid);setPanelStatus('UID copiado: '+uid,'ok');}catch(e){setPanelStatus(e.message||String(e),'bad');}};renderSecurityState();}
+  function setPanelStatus(msg,tone=''){const el=document.getElementById('mxFirebaseAuthStatus');if(!el)return;el.className='mx-fba-status'+(tone?' '+tone:'');el.textContent=msg;}
+  async function approveAdmin(uid,active){try{await rawDb('/firebase_admins/'+encodeURIComponent(uid),active?'PUT':'DELETE',active?{active:true,role:'controller',approvedAt:new Date().toISOString(),approvedBy:(await ensureAuth()).localId}:null);if(active)await rawDb('/firebase_admin_requests/'+encodeURIComponent(uid),'PATCH',{status:'approved',active:true,approvedAt:new Date().toISOString()});await renderAdminRequests();}catch(e){setPanelStatus(e.message||String(e),'bad');}}
+  async function renderAdminRequests(){const area=document.getElementById('mxFirebaseAdminArea');if(!area)return;const admin=await isAdmin(true).catch(()=>false);if(!admin){area.innerHTML='';return;}let rows={};try{rows=await rawDb('/firebase_admin_requests','GET')||{};}catch(_e){}const list=Object.values(rows).filter(Boolean).sort((a,b)=>String(b.requestedAt||'').localeCompare(String(a.requestedAt||''))).slice(0,20);area.innerHTML=`<div class="mx-fba-subtitle">Solicitudes de administradores</div>${list.length?list.map(r=>`<div class="mx-fba-request"><div><b>${esc(r.appName||r.appCode||'Aplicación')}</b><small>${esc(r.uid||'')} · ${esc(r.deviceId||'')}</small></div><button type="button" data-approve="${esc(r.uid||'')}">${r.active?'Reautorizar':'Autorizar'}</button></div>`).join(''):'<small>No hay solicitudes pendientes.</small>'}`;area.querySelectorAll('[data-approve]').forEach(b=>b.onclick=()=>approveAdmin(b.dataset.approve,true));}
+  async function renderSecurityState(){const el=document.getElementById('mxFirebaseAuthStatus');if(!el)return;const key=getApiKey();if(!key){setPanelStatus('Falta la Clave Web API. Copia la del mismo proyecto de Firebase.','bad');return;}let s;try{s=await ensureAuth(false);}catch(e){setPanelStatus(e.message||String(e),'bad');return;}if(OPT.role==='admin'){const admin=await isAdmin(true).catch(()=>false);setPanelStatus(admin?'✅ Administrador Firebase autorizado · UID '+s.localId:'⏳ UID pendiente de autorizar: '+s.localId,admin?'ok':'warn');if(admin)renderAdminRequests();}else{const linked=await syncViewerAuthorization().catch(()=>false);setPanelStatus((linked?'✅ Dispositivo autenticado y vinculado':'🔒 Autenticado; esperando licencia activa')+' · UID '+s.localId,linked?'ok':'warn');}}
+  function installUi(){if(!document.getElementById('mxFirebaseAuthStyle')){const st=document.createElement('style');st.id='mxFirebaseAuthStyle';st.textContent=`.mx-fba-panel{margin-top:14px;padding:13px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc}.mx-fba-title{font-weight:900;color:#0f2745;margin-bottom:5px}.mx-fba-help{font-size:11px;color:#64748b;line-height:1.4;margin-bottom:9px}.mx-fba-panel label{display:block;font-size:11px;font-weight:850;color:#334155;margin:7px 0 4px}.mx-fba-line{display:flex;gap:6px}.mx-fba-line input{flex:1;min-width:0;height:39px;border:1px solid #cbd5e1;border-radius:9px;padding:8px}.mx-fba-line button{width:42px;min-width:42px}.mx-fba-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.mx-fba-actions button,.mx-fba-request button{width:auto;min-width:0;padding:8px 10px;border:0;border-radius:8px;background:#0b5cab;color:#fff;font-weight:800;cursor:pointer}.mx-fba-status{margin-top:8px;padding:8px;border-radius:8px;background:#eef2ff;font-size:11px;overflow-wrap:anywhere}.mx-fba-status.ok{background:#ecfdf5;color:#166534}.mx-fba-status.warn{background:#fffbeb;color:#92400e}.mx-fba-status.bad{background:#fef2f2;color:#991b1b}.mx-fba-subtitle{font-weight:900;margin:10px 0 5px}.mx-fba-request{display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid #e2e8f0;padding:7px 0}.mx-fba-request small{display:block;font-size:9px;color:#64748b;overflow-wrap:anywhere}`;document.head.appendChild(st);}attachPanel();const mo=new MutationObserver(()=>{clearTimeout(uiTimer);uiTimer=setTimeout(attachPanel,30);});mo.observe(document.documentElement,{childList:true,subtree:true});}
+  window.MXFirebaseAuth={ensureAuth,getUid:async()=>{const s=await ensureAuth();return s.localId;},getApiKey,setApiKey,clearSession,isAdmin,syncViewerAuthorization,open:()=>{document.getElementById('mxUrlHelpButton')?.click();attachPanel();}};
+  window.addEventListener('online',()=>postAuthSetup().catch(()=>{}));window.addEventListener('mx-viewer-config-changed',()=>{clearSession();setTimeout(()=>renderSecurityState(),100);});window.addEventListener('mx-viewer-licensed',()=>syncViewerAuthorization().catch(()=>{}));setInterval(()=>postAuthSetup().catch(()=>{}),5*60*1000);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installUi();if(getApiKey())ensureAuth().then(postAuthSetup).catch(()=>{});},{once:true});else{installUi();if(getApiKey())ensureAuth().then(postAuthSetup).catch(()=>{});}
+})();
+
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -913,7 +1017,7 @@ th{font-size:10px;}
   'use strict';
   if(window.__mxViewerActivationV102)return;window.__mxViewerActivationV102=true;
   window.__mxViewerLicensed=false;
-  const APP_CODE='MACROXEL-VISOR', VERSION='1.0.22';
+  const APP_CODE='MACROXEL-VISOR', VERSION='1.0.23';
   const DEVICE_KEY='mx_visor_device_id_v1', LOCAL_LICENSE_KEY='mx_visor_license_cache_v1', CFG_KEY='mx_viewer_transferencias_cfg_v104';
   const $=id=>document.getElementById(id), txt=v=>String(v==null?'':v).trim(), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function hash(value){let h=0x811c9dc5,s=String(value||'');for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0;}return ('00000000'+h.toString(16)).slice(-8).toUpperCase();}
