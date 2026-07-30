@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- MACROXEL SALIDAS v1.0.34 · Archivo autónomo para GitHub Pages: CPM y logotipo integrados -->
+<!-- MACROXEL SALIDAS v1.0.35 · Archivo autónomo para GitHub Pages: CPM y logotipo integrados -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MACROXEL Transferencias v1.0.34</title>
+<title>MACROXEL Transferencias v1.0.35</title>
 <!-- CPM predeterminado integrado: archivo autónomo para GitHub Pages -->
 <script id="mx-cpm-default-integrado">
 window.MX_DEFAULT_CPM_VERSION="1895E660C985D879";
@@ -475,7 +475,7 @@ th{font-size:10px;}
       <h3 id="transferDirectionTitle" style="margin:0 0 7px">🔁 Transferencia de Almacén a Estantes / Anaqueles</h3>
       <div style="display:grid;grid-template-columns:minmax(260px,430px) 1fr;gap:10px;align-items:end;margin:8px 0 12px;padding:10px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;">
         <div><label>Sentido de la transferencia</label><select id="transferDirection" style="width:100%;min-height:42px;border:1px solid #b7c8df;border-radius:10px;padding:8px 10px;font-weight:800;background:#fff"><option value="A2E">Almacén → Estantes / Anaqueles</option><option value="E2A">Estantes / Anaqueles → Almacén</option></select></div>
-        <div class="status" id="transferDirectionHelp" style="margin:0">Selecciona de dónde salen las piezas. El carrito utiliza un solo sentido.</div>
+        <div id="transferDirectionHelp" class="hidden" aria-hidden="true"></div>
       </div>
       <div class="transfer-layout">
         <div>
@@ -510,7 +510,7 @@ th{font-size:10px;}
   </section>
   <section id="pharmacyOrdersView" class="mx-hidden">
     <div class="card">
-      <div class="po-head"><div><h3 style="margin:0">📋 Pedido de farmacia</h3><div class="po-alert">El pedido se calcula por clave, sumando todos sus lotes en Estantes. Solo aparece cuando el total queda por debajo del stock recomendado para 8 días, calculado con el consumo de los últimos 30 días.</div></div><button id="btnPoReload" type="button">🔄 Actualizar pedido</button></div>
+      <div class="po-head"><div><h3 style="margin:0">📋 Pedido de farmacia</h3><div class="po-alert">El pedido se calcula por clave, sumando todos sus lotes en Estantes. Solo aparece cuando el total queda por debajo del stock recomendado para 8 días, calculado con el consumo de los últimos 15 días.</div></div><button id="btnPoReload" type="button">🔄 Actualizar pedido</button></div>
       <div class="po-tools"><div><label>Buscar por clave o descripción</label><input id="poSearch" placeholder="Escribe clave o nombre del producto..."></div><button id="btnPoAddAll" type="button">🛒 Agregar todos al carrito</button><button id="btnPoClearFilter" type="button" class="btn-secondary">Limpiar filtro</button></div>
       <div class="po-kpis"><div class="po-kpi"><span class="muted">Productos pendientes</span><b id="poKProducts">0</b></div><div class="po-kpi"><span class="muted">Piezas recomendadas</span><b id="poKPieces">0</b></div><div class="po-kpi"><span class="muted">Última actualización</span><b id="poKUpdated" style="font-size:12px">Sin consultar</b></div></div>
       <div class="status" id="poStatus">Abre esta pestaña para consultar el pedido.</div>
@@ -522,7 +522,7 @@ th{font-size:10px;}
 <div class="qty-modal" id="transferQtyModal" aria-hidden="true"><div class="qty-box"><h3>Agregar producto</h3><div class="qty-product" id="transferQtyProduct">Producto</div><label>Cantidad de piezas</label><input id="transferQtyInput" type="number" min="1" step="1" value="1"><div class="status" id="transferQtyHelp"></div><div class="qty-actions"><button id="transferQtyCancel" type="button" class="btn-secondary">Cancelar</button><button id="transferQtyAccept" type="button">Agregar al carrito</button></div></div></div><div class="qty-modal" id="transferLotsModal" aria-hidden="true"><div class="qty-box" style="width:min(720px,96vw)"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3 style="margin:0">Selecciona el lote</h3><button id="transferLotsClose" type="button" class="btn-secondary">Cerrar</button></div><div class="status" id="transferLotsTitle" style="margin:8px 0"></div><div id="transferLotsList" class="transfer-results" style="max-height:420px"></div></div></div>
 <script id="mx-visor-principal-v101">
 (function(){
-  const DEFAULTS={db:'',branch:'HGAM'};
+  const DEFAULTS={db:'https://ecosistema-macroxel-default-rtdb.firebaseio.com',branch:'HGAM'};
   const LS='mx_viewer_transferencias_cfg_v104';
   let raw=[],filtered=[],selectedKey='',selectedName='',selectedExp='',patientCatalog=[],inventoryItems=[],inventoryFiltered=[],inventoryLoaded=false;
   const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -581,10 +581,10 @@ th{font-size:10px;}
       throw e;
     }
   }
-  async function fetchData(){const c=getCfg();$('pillUpdated').textContent='Consultando pacientes...';await testConnection();await loadPatientList();raw=[];filtered=[];selectedKey='';selectedName='';selectedExp='';$('pillUpdated').textContent=patientCatalog.length?'Últimos 30 días · lista actualizada':'Últimos 30 días · sin pacientes';renderPatients();applyFilters();}
+  async function fetchData(){const c=getCfg();$('pillUpdated').textContent='Consultando pacientes...';await testConnection();await loadPatientList();raw=[];filtered=[];selectedKey='';selectedName='';selectedExp='';$('pillUpdated').textContent=patientCatalog.length?'Últimos 15 días · lista actualizada':'Últimos 15 días · sin pacientes';renderPatients();applyFilters();}
   async function loadPatientList(){const c=getCfg(),data=await fetchJson('/antibiotic_patient_list/'+encodeURIComponent(c.branch));patientCatalog=(Array.isArray(data?.patients)?data.patients:[]).map(p=>({key:String(p.key||'').trim(),nombre:String(p.nombre||'').trim(),expediente:String(p.expediente||'').trim(),totalPzs:num(p.totalPzs),registros:num(p.registros),foliosCount:num(p.foliosCount??(Array.isArray(p.folios)?p.folios.length:0)),medicamentosCount:num(p.medicamentosCount??(Array.isArray(p.medicamentos)?p.medicamentos.length:0)),ultimaFecha:String(p.ultimaFecha||'')})).filter(p=>p.key&&p.nombre).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')||a.expediente.localeCompare(b.expediente,'es'));}
   function makeQueryId(){return'req_'+Date.now()+'_'+Math.random().toString(36).slice(2,9)}
-  async function sendPatientQuery(){const c=getCfg();if(!selectedKey){raw=[];filtered=[];applyFilters();$('pillUpdated').textContent='Selecciona un paciente';return false;}raw=[];filtered=[];renderTable();renderKpis();$('pillUpdated').textContent='Consultando historial publicado...';try{const direct=await fetchJson('/antibiotic_patient_history/'+encodeURIComponent(c.branch));const node=direct?.patients?.[selectedKey]||Object.values(direct?.patients||{}).find(x=>String(x?.key||'')===selectedKey);if(node&&Array.isArray(node.items)){raw=node.items;$('pillUpdated').textContent='Historial sincronizado · últimos 30 días';applyFilters();if(raw.length)return true;}}catch(_e){}const id=makeQueryId(),body={id,status:'pending',sucursal:c.branch,createdAt:new Date().toISOString(),patientKey:selectedKey,patient:selectedName,expediente:selectedExp,from:'',to:''};try{await putJson('/antibiotic_patient_queries/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id),body);$('pillUpdated').textContent='Actualizando desde el sistema principal...';for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,750));const resp=await fetchJson('/antibiotic_patient_responses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id)).catch(()=>null);if(resp&&Array.isArray(resp.items)){raw=resp.items;$('pillUpdated').textContent='Respuesta actualizada · últimos 30 días';applyFilters();return true;}}}catch(_e){}applyFilters();$('pillUpdated').textContent=raw.length?'Historial publicado':'Sin movimientos publicados';return raw.length>0;}
+  async function sendPatientQuery(){const c=getCfg();if(!selectedKey){raw=[];filtered=[];applyFilters();$('pillUpdated').textContent='Selecciona un paciente';return false;}raw=[];filtered=[];renderTable();renderKpis();$('pillUpdated').textContent='Consultando historial publicado...';try{const direct=await fetchJson('/antibiotic_patient_history/'+encodeURIComponent(c.branch));const node=direct?.patients?.[selectedKey]||Object.values(direct?.patients||{}).find(x=>String(x?.key||'')===selectedKey);if(node&&Array.isArray(node.items)){raw=node.items;$('pillUpdated').textContent='Historial sincronizado · últimos 15 días';applyFilters();if(raw.length)return true;}}catch(_e){}const id=makeQueryId(),body={id,status:'pending',sucursal:c.branch,createdAt:new Date().toISOString(),patientKey:selectedKey,patient:selectedName,expediente:selectedExp,from:'',to:''};try{await putJson('/antibiotic_patient_queries/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id),body);$('pillUpdated').textContent='Actualizando desde el sistema principal...';for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,750));const resp=await fetchJson('/antibiotic_patient_responses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id)).catch(()=>null);if(resp&&Array.isArray(resp.items)){raw=resp.items;$('pillUpdated').textContent='Respuesta actualizada · últimos 15 días';applyFilters();return true;}}}catch(_e){}applyFilters();$('pillUpdated').textContent=raw.length?'Historial publicado':'Sin movimientos publicados';return raw.length>0;}
 function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||'')===selectedKey||(!x.patientKey&&norm(x.paciente)===norm(selectedName)&&(!selectedExp||norm(x.expediente)===norm(selectedExp)))):[];renderPatients();renderTable();renderKpis();}
   function renderKpis(){const pats=new Set(filtered.map(x=>x.patientKey||x.paciente)),fol=new Set(filtered.map(x=>x.folio).filter(Boolean));if($('kPatients'))$('kPatients').textContent=pats.size;if($('kRows'))$('kRows').textContent=filtered.length;if($('kPzs'))$('kPzs').textContent=filtered.reduce((a,b)=>a+num(b.pzs),0);if($('kFolios'))$('kFolios').textContent=fol.size;}
   function renderPatients(){const q=norm($('q').value),list=patientCatalog.filter(p=>!q||norm(p.nombre).includes(q)||norm(p.expediente).includes(q));$('patientList').innerHTML=list.length?list.map(p=>`<button class="patient ${selectedKey===p.key?'active':''}" data-key="${esc(p.key)}"><div class="name">${esc(p.nombre)}</div><div class="meta">${p.expediente?'Exp. '+esc(p.expediente)+' · ':''}${p.totalPzs} pzs · ${p.foliosCount} folios · ${p.medicamentosCount} medicamentos${p.ultimaFecha?' · Último '+esc(p.ultimaFecha):''}</div></button>`).join(''):'<div class="empty">Sin pacientes</div>';document.querySelectorAll('.patient').forEach(b=>b.onclick=()=>{const p=patientCatalog.find(x=>x.key===b.dataset.key);if(!p)return;selectedKey=p.key;selectedName=p.nombre;selectedExp=p.expediente;$('q').value=p.nombre+(p.expediente?' · '+p.expediente:'');sendPatientQuery().catch(e=>{$('pillUpdated').textContent='Error: '+e.message;setFirebaseStatus(false,'Sin acceso a Firebase');});});}
@@ -740,7 +740,7 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
   function formatDate(v){const d=new Date(v);return Number.isNaN(d.getTime())?txt(v):d.toLocaleString('es-MX');}function cartKey(x){return[norm(x.clave),norm(x.codigo_barras),norm(x.lote),norm(x.caducidad)].join('|');}function setStatus(m,k=''){const el=$('transferSendStatus');if(!el)return;el.textContent=m;el.style.color=k==='bad'?'#991b1b':k==='ok'?'#166534':'#64748b';el.style.fontWeight=k?'800':'normal';}
   function direction(){const value=String($('transferDirection')?.value||lastDirection||'A2E').toUpperCase()==='E2A'?'E2A':'A2E';return value==='E2A'?{code:value,from:'estantes',to:'almacen',fromLabel:'Estantes / Anaqueles',toLabel:'Almacén',title:'Transferencia de Estantes / Anaqueles a Almacén'}:{code:value,from:'almacen',to:'estantes',fromLabel:'Almacén',toLabel:'Estantes / Anaqueles',title:'Transferencia de Almacén a Estantes / Anaqueles'};}
   function available(row){const d=direction();return Math.max(0,num(row?.[d.from]));}
-  function updateDirectionUi(){const d=direction(),title=$('transferDirectionTitle'),help=$('transferDirectionHelp'),finish=$('btnFinalizeTransfer');lastDirection=d.code;try{localStorage.setItem(DIRECTION_KEY,d.code);}catch(_e){}if(title)title.textContent='🔁 '+d.title;if(help)help.textContent=`Las piezas saldrán de ${d.fromLabel} y se sumarán a ${d.toLabel}. El carrito utiliza un solo sentido.`;if(finish)finish.textContent=`✅ Finalizar: ${d.fromLabel} → ${d.toLabel} y generar PDF`;renderResults();renderCart();}
+  function updateDirectionUi(){const d=direction(),title=$('transferDirectionTitle'),help=$('transferDirectionHelp'),finish=$('btnFinalizeTransfer');lastDirection=d.code;try{localStorage.setItem(DIRECTION_KEY,d.code);}catch(_e){}if(title)title.textContent='🔁 '+d.title;if(help)help.textContent='';if(finish)finish.textContent=`✅ Finalizar: ${d.fromLabel} → ${d.toLabel} y generar PDF`;renderResults();renderCart();}
   async function loadLots(force=false){
     if(loaded&&!force){renderResults();return;}
     $('transferInventoryStatus').textContent='Sincronizando CPM y existencias...';$('transferResults').innerHTML='<div class="empty">Cargando...</div>';
@@ -913,7 +913,7 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
   'use strict';
   if(window.__mxViewerActivationV102)return;window.__mxViewerActivationV102=true;
   window.__mxViewerLicensed=false;
-  const APP_CODE='MACROXEL-VISOR', VERSION='1.0.34';
+  const APP_CODE='MACROXEL-VISOR', VERSION='1.0.35';
   const DEVICE_KEY='mx_visor_device_id_v1', LOCAL_LICENSE_KEY='mx_visor_license_cache_v1', CFG_KEY='mx_viewer_transferencias_cfg_v104';
   const $=id=>document.getElementById(id), txt=v=>String(v==null?'':v).trim(), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function hash(value){let h=0x811c9dc5,s=String(value||'');for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0;}return ('00000000'+h.toString(16)).slice(-8).toUpperCase();}
@@ -1205,28 +1205,60 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
 })();
 </script>
 
-<style id="mx-ecosystem-live-id-v105-style">
-#mxEcosystemLiveId{position:fixed;left:10px;bottom:8px;z-index:9990;max-width:min(94vw,760px);padding:5px 9px;border:1px solid #cbd5e1;border-radius:10px;background:rgba(255,255,255,.94);box-shadow:0 4px 14px rgba(15,23,42,.12);font:700 9px/1.25 system-ui;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#mxEcosystemLiveId b{color:#0f4c81}@media(max-width:600px){#mxEcosystemLiveId{font-size:8px;right:8px;max-width:none}}
+<style id="mx-ecosystem-live-id-v106-style">
+#mxConnectionDiagnostic{display:none!important}
+#mxEcosystemLiveId{position:fixed;left:10px;right:auto;bottom:max(8px,env(safe-area-inset-bottom));z-index:9990;max-width:min(92vw,820px);padding:5px 9px;border:1px solid #cbd5e1;border-radius:10px;background:rgba(255,255,255,.96);box-shadow:0 4px 14px rgba(15,23,42,.12);font:700 9px/1.25 system-ui;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mxEcosystemLiveId b{color:#0f4c81}
+.mx-connection-gate-info{margin:9px 0 2px;padding:8px 10px;border:1px solid #bfdbfe;border-radius:11px;background:#eff6ff;color:#1e3a5f;font:700 10px/1.35 system-ui;word-break:break-all}
+.mx-connection-gate-info b{color:#0b4f7d}
+@media(max-width:600px){#mxEcosystemLiveId{left:8px;right:8px;max-width:none;font-size:8px}.mx-connection-gate-info{font-size:9px;padding:7px 8px}}
 </style>
-<script id="mx-ecosystem-viewer-config-v105">
+<script id="mx-ecosystem-viewer-config-v106">
 (function(){
- 'use strict';if(window.__mxEcosystemViewerConfigV105)return;window.__mxEcosystemViewerConfigV105=true;
- const LEGACY='HGAM',POLL=12000;let checking=false,last='';
+ 'use strict';if(window.__mxEcosystemViewerConfigV106)return;window.__mxEcosystemViewerConfigV106=true;
+ const DISCOVERY_DB='https://ecosistema-macroxel-default-rtdb.firebaseio.com',LEGACY='HGAM',POLL=10000;let checking=false,last='';
  const txt=v=>String(v==null?'':v).trim(),cleanDb=v=>txt(v).replace(/\.json\/?$/i,'').replace(/\/+$/,'');
  function cleanId(v){return(txt(v)||LEGACY).toUpperCase().replace(/[.#$\[\]\/]/g,'_')||LEGACY;}
- function cfg(){try{const c=window.mxViewerGetCfg?.();if(c)return{db:cleanDb(c.db),branch:cleanId(c.branch)}}catch(_e){}return{db:'',branch:LEGACY};}
+ function cfg(){try{const c=window.mxViewerGetCfg?.();if(c)return{db:cleanDb(c.db)||DISCOVERY_DB,branch:cleanId(c.branch)}}catch(_e){}return{db:DISCOVERY_DB,branch:LEGACY};}
  function rest(db,path){const b=cleanDb(db);if(!b)return'';const p=String(path||'').startsWith('/')?String(path):'/'+String(path||'');const u=new URL(b+p+(p.endsWith('.json')?'':'.json'));u.searchParams.set('ts',String(Date.now()));return u.toString();}
  async function read(db,path){const u=rest(db,path);if(!u)return null;const r=await fetch(u,{cache:'no-store'});if(!r.ok)return null;return r.json().catch(()=>null);}
  function connectionFrom(r){if(!r||typeof r!=='object')return null;const db=cleanDb(r.firebaseUrl||r.currentUrl||r.db||r.url),branch=cleanId(r.unitId||r.activationId||r.storeId||r.branch);return db?{db,branch}:null;}
- function render(){const c=cfg();let el=document.getElementById('mxEcosystemLiveId');if(!el){el=document.createElement('div');el.id='mxEcosystemLiveId';document.body.appendChild(el);}el.innerHTML=`<b>ID unidad:</b> ${c.branch||'SIN ID'} · <b>Firebase:</b> ${c.db||'SIN URL'}`;el.title=`ID de activación de la licencia principal: ${c.branch||'SIN ID'}\nURL activa: ${c.db||'SIN URL'}`;
-   for(const id of ['viewerDb','setDb','dbUrlInput']){const x=document.getElementById(id);if(x&&document.activeElement!==x)x.value=c.db||'';}
+ function visible(el){if(!el||!el.isConnected)return false;for(let n=el;n&&n!==document.documentElement;n=n.parentElement){if(n.hidden)return false;const s=getComputedStyle(n);if(s.display==='none'||s.visibility==='hidden'||Number(s.opacity)===0)return false;}return true;}
+ function gateCard(){const selectors=['#activationGate .gate-card','#loginGate .gate-card','#mxViewerActivationGate .mx-va-card','#mxViewerSalidaAuth .mx-vsa-card','#mxVaGate .mx-va-card'];return selectors.map(s=>document.querySelector(s)).find(visible)||null;}
+ function render(){
+   const c=cfg(),old=document.getElementById('mxConnectionDiagnostic');if(old)old.remove();
+   let el=document.getElementById('mxEcosystemLiveId');if(!el){el=document.createElement('div');el.id='mxEcosystemLiveId';document.body.appendChild(el);}
+   el.innerHTML=`<b>ID unidad:</b> ${c.branch||'SIN ID'} · <b>Firebase:</b> ${c.db||'SIN URL'}`;el.title=`ID de activación de la licencia principal: ${c.branch||'SIN ID'}\nURL activa: ${c.db||'SIN URL'}`;
+   for(const id of ['viewerDb','setDb','dbUrlInput','mxVaDb']){const x=document.getElementById(id);if(x&&document.activeElement!==x)x.value=c.db||'';}
    for(const id of ['viewerBranch','mxVaBranch','setBranch','branchInput']){const x=document.getElementById(id);if(x){x.value=c.branch||LEGACY;x.readOnly=true;x.title='ID automático de la licencia principal';}}
-   const d=document.getElementById('mxConnectionDiagnostic');if(d)d.textContent=`Firebase: ${c.db||'SIN URL'} · ID unidad: ${c.branch||'SIN ID'}`;
-   document.querySelectorAll('label').forEach(l=>{const f=l.getAttribute('for')||'';if(['viewerBranch','mxVaBranch','setBranch','branchInput'].includes(f)||l.querySelector?.('#viewerBranch,#mxVaBranch,#setBranch,#branchInput'))l.childNodes[0]&&(l.childNodes[0].textContent='ID unidad (licencia principal)');});
+   const card=gateCard();let info=document.getElementById('mxConnectionGateInfo');
+   if(card){if(!info){info=document.createElement('div');info.id='mxConnectionGateInfo';info.className='mx-connection-gate-info';}info.innerHTML=`<b>URL:</b> ${c.db||'SIN URL'}<br><b>ID unidad:</b> ${c.branch||'SIN ID'}`;const brand=card.querySelector('.gate-brand,.mx-va-brand,.mx-vsa-brand');if(info.parentElement!==card){if(brand?.nextSibling)card.insertBefore(info,brand.nextSibling);else card.prepend(info);}el.style.display='none';}
+   else{if(info)info.remove();el.style.display='';}
  }
- async function check(force=false){if(checking)return false;const current=cfg();render();if(!current.db||navigator.onLine===false)return false;checking=true;try{let rec=null;const ids=[...new Set([current.branch,LEGACY])];for(const id of ids){rec=await read(current.db,`/ecosystem_connection/${encodeURIComponent(id)}`);if(!rec)rec=await read(current.db,`/inventory_heartbeat/${encodeURIComponent(id)}/ecosystemConnection`);if(rec)break;}const next=connectionFrom(rec);if(!next)return false;const signature=next.db+'|'+next.branch;if(signature===last&&!force)return false;last=signature;if(next.db!==current.db||next.branch!==current.branch){const previous=current;let saved=next;try{saved=window.mxViewerSaveCfg?.(next,false)||next}catch(_e){}try{localStorage.setItem('mx_ecosystem_connection_v2',JSON.stringify({...rec,...saved}));}catch(_e){}window.dispatchEvent(new CustomEvent('mx-viewer-config-changed',{detail:{previous,next:saved,autoSync:true,source:'MACROXEL_HOSPITALES'}}));setTimeout(()=>window.dispatchEvent(new CustomEvent('mx-viewer-refresh-now',{detail:{reason:'CONFIGURACION_PRINCIPAL'}})),350);}render();return true;}catch(e){console.warn('[ECOSISTEMA] No se pudo consultar configuración principal',e?.message||e);return false;}finally{checking=false;}}
- window.mxCheckPrincipalConnection=check;window.addEventListener('online',()=>check(true));window.addEventListener('focus',()=>check(false));window.addEventListener('mx-viewer-config-changed',()=>setTimeout(render,20));
- const boot=()=>{render();setTimeout(()=>check(true),900);setInterval(()=>check(false),POLL);setInterval(render,5000);};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+ function connectionStamp(r){const t=new Date(r?.updatedAt||r?.publishedAt||r?.createdAt||0).getTime();return Number.isFinite(t)?t:0;}
+ async function locate(current){
+   const dbs=[...new Set([cleanDb(current.db),DISCOVERY_DB].filter(Boolean))],ids=[...new Set([cleanId(current.branch),LEGACY])],candidates=[];
+   for(const db of dbs){
+     const latest=await read(db,'/ecosystem_connection/latest').catch(()=>null);if(connectionFrom(latest))candidates.push(latest);
+     for(const id of ids){const direct=await read(db,`/ecosystem_connection/${encodeURIComponent(id)}`).catch(()=>null);if(connectionFrom(direct))candidates.push(direct);const heartbeat=await read(db,`/inventory_heartbeat/${encodeURIComponent(id)}/ecosystemConnection`).catch(()=>null);if(connectionFrom(heartbeat))candidates.push(heartbeat);}
+   }
+   return candidates.sort((a,b)=>connectionStamp(b)-connectionStamp(a))[0]||null;
+ }
+ async function check(force=false){
+   if(checking)return false;const current=cfg();render();if(navigator.onLine===false)return false;checking=true;
+   try{const rec=await locate(current);const next=connectionFrom(rec);if(!next)return false;const signature=next.db+'|'+next.branch;if(signature===last&&!force)return false;last=signature;
+     if(next.db!==current.db||next.branch!==current.branch){const previous=current;let saved=next;try{saved=window.mxViewerSaveCfg?.(next,false)||next}catch(_e){}try{localStorage.setItem('mx_ecosystem_connection_v3',JSON.stringify({...rec,...saved,discoveredAt:new Date().toISOString()}));}catch(_e){}
+       window.dispatchEvent(new CustomEvent('mx-viewer-config-changed',{detail:{previous,next:saved,autoSync:true,source:'MACROXEL_HOSPITALES'}}));
+       setTimeout(()=>window.dispatchEvent(new CustomEvent('mx-viewer-refresh-now',{detail:{reason:'CONFIGURACION_PRINCIPAL'}})),250);
+       setTimeout(()=>{const b=document.querySelector('#actValidate,#mxVaValidate');if(b&&visible(b))try{b.click();}catch(_e){}},500);
+     }
+     render();return true;
+   }catch(e){console.warn('[ECOSISTEMA] No se pudo consultar configuración principal',e?.message||e);return false;}finally{checking=false;}
+ }
+ window.mxCheckPrincipalConnection=check;window.mxEnsureViewerConnection=()=>check(true);
+ document.addEventListener('click',async e=>{const b=e.target.closest?.('#actSubmit,#actValidate,#mxVaSubmit,#mxVaValidate,#loginBtn,#mxVsaLogin');if(!b||b.dataset.mxConnectionPass==='1')return;const c=cfg();if(!(cleanDb(c.db)===DISCOVERY_DB&&cleanId(c.branch)===LEGACY))return;e.preventDefault();e.stopImmediatePropagation();const was=b.disabled;b.disabled=true;const found=await check(true);b.disabled=was;const now=cfg();if(!found||cleanId(now.branch)===LEGACY){const info=document.getElementById('mxConnectionGateInfo');if(info)info.innerHTML='<b>No se encontró la conexión principal.</b><br>Abre Macroxel Hospitales con internet y guarda la URL para publicar el ID de activación.';return;}b.dataset.mxConnectionPass='1';try{b.click();}finally{setTimeout(()=>delete b.dataset.mxConnectionPass,0);}},true);
+ window.addEventListener('online',()=>check(true));window.addEventListener('focus',()=>check(false));window.addEventListener('mx-viewer-config-changed',()=>setTimeout(render,20));
+ const boot=()=>{render();check(true);setTimeout(()=>check(true),700);setTimeout(()=>check(false),2500);setInterval(()=>check(false),POLL);setInterval(render,3000);};if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
 
