@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- MACROXEL SALIDAS v1.0.35 · Archivo autónomo para GitHub Pages: CPM y logotipo integrados -->
+<!-- MACROXEL SALIDAS v1.0.36 · Archivo autónomo para GitHub Pages: CPM y logotipo integrados -->
 <html lang="es">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MACROXEL Transferencias v1.0.35</title>
+<title>MACROXEL Transferencias v1.0.36</title>
 <!-- CPM predeterminado integrado: archivo autónomo para GitHub Pages -->
 <script id="mx-cpm-default-integrado">
 window.MX_DEFAULT_CPM_VERSION="1895E660C985D879";
@@ -913,7 +913,7 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
   'use strict';
   if(window.__mxViewerActivationV102)return;window.__mxViewerActivationV102=true;
   window.__mxViewerLicensed=false;
-  const APP_CODE='MACROXEL-VISOR', VERSION='1.0.35';
+  const APP_CODE='MACROXEL-VISOR', VERSION='1.0.36';
   const DEVICE_KEY='mx_visor_device_id_v1', LOCAL_LICENSE_KEY='mx_visor_license_cache_v1', CFG_KEY='mx_viewer_transferencias_cfg_v104';
   const $=id=>document.getElementById(id), txt=v=>String(v==null?'':v).trim(), esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   function hash(value){let h=0x811c9dc5,s=String(value||'');for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=(h+((h<<1)+(h<<4)+(h<<7)+(h<<8)+(h<<24)))>>>0;}return ('00000000'+h.toString(16)).slice(-8).toUpperCase();}
@@ -1119,70 +1119,6 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
   window.addEventListener('online',render);
 })();
 </script>
-
-<script>window.MX_URL_MANAGER_APP='MACROXEL Transferencias';window.MX_URL_MANAGER_CLEAR_KEYS=["mx_visor_license_cache_v1", "mx_transferencias_user_session_v104", "mx_visor_cpm_totals_v111", "mx_visor_cpm_seq_v111"];</script>
-
-<style id="mx-url-manager-style-v112">
-.mx-url-help-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;min-width:34px;height:34px;min-height:34px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:#0b4f7d;color:#fff;font:900 18px/1 Arial,sans-serif;box-shadow:0 4px 14px rgba(15,23,42,.2);cursor:pointer;position:relative;z-index:3}
-.mx-url-help-btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
-.mx-url-help-slot{display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;min-width:34px;min-height:34px;position:relative;z-index:3;margin:0 4px;box-sizing:border-box}
-.mx-url-header-slot{align-self:center}
-.mx-url-gate-slot{display:flex;width:100%;justify-content:flex-end;min-height:34px;margin:0 0 8px;padding:0;box-sizing:border-box}
-.mx-url-gate-slot .mx-url-help-btn{background:#fff;color:#0b4f7d;border-color:#bfdbfe;box-shadow:0 3px 12px rgba(15,23,42,.14)}
-.mx-url-floating-slot{position:fixed;z-index:2147483645;margin:0;padding:0;width:34px;height:34px}
-#mxUrlManagerOverlay{position:fixed;inset:0;z-index:2147483646;background:rgba(2,6,23,.68);display:flex;align-items:center;justify-content:center;padding:14px;font-family:'Segoe UI',Arial,sans-serif}
-#mxUrlManagerOverlay.mx-url-hidden{display:none!important}
-.mx-url-card{width:min(620px,96vw);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.34);overflow:hidden;color:#172033}
-.mx-url-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:linear-gradient(135deg,#073b5f,#0b5d91);color:#fff}
-.mx-url-head h3{margin:0;font-size:17px}.mx-url-head p{margin:3px 0 0;font-size:11px;opacity:.88}
-.mx-url-close{width:34px;height:34px;border:0;border-radius:10px;background:rgba(255,255,255,.16);color:#fff;font-size:20px;cursor:pointer}
-.mx-url-body{padding:18px}.mx-url-label{display:block;font-size:11px;font-weight:900;color:#334155;margin:0 0 6px;text-transform:uppercase;letter-spacing:.35px}
-.mx-url-line{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:8px;align-items:center}.mx-url-line input{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:11px;padding:11px 12px;font:600 12px/1.3 'Segoe UI',Arial,sans-serif;background:#f1f5f9;color:#475569}.mx-url-line input:not([readonly]){background:#fff;color:#0f172a;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
-.mx-url-pencil{height:42px;border:0;border-radius:11px;background:#e0efff;color:#075985;font-size:18px;cursor:pointer}
-.mx-url-branch{margin-top:12px;padding:9px 11px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;font-size:11px;color:#475569}.mx-url-note{margin-top:12px;padding:10px 12px;border-radius:11px;background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;font-size:11px;line-height:1.4}
-.mx-url-status{min-height:18px;margin-top:10px;font-size:11px;font-weight:700;color:#475569}.mx-url-status.bad{color:#b91c1c}.mx-url-status.ok{color:#15803d}
-.mx-url-actions{display:flex;justify-content:flex-end;gap:8px;padding:0 18px 18px}.mx-url-actions button{border:0;border-radius:11px;padding:10px 14px;font-weight:900;cursor:pointer}.mx-url-cancel{background:#e2e8f0;color:#334155}.mx-url-save{background:#16a34a;color:#fff}.mx-url-save:disabled{opacity:.45;cursor:default}
-@media(max-width:640px){.mx-url-help-btn,.mx-url-help-slot{width:31px;min-width:31px;height:31px;min-height:31px;font-size:16px}.mx-url-gate-slot{min-height:31px;margin-bottom:6px}.mx-url-help-slot{margin:0 2px}.mx-url-body{padding:14px}.mx-url-actions{padding:0 14px 14px}}
-</style>
-<script id="mx-url-manager-v112">
-(function(){
-  'use strict';
-  if(window.__mxUrlManagerV112)return;window.__mxUrlManagerV112=true;
-  const APP=window.MX_URL_MANAGER_APP||'MACROXEL Visor';
-  const CLEAR_KEYS=Array.isArray(window.MX_URL_MANAGER_CLEAR_KEYS)?window.MX_URL_MANAGER_CLEAR_KEYS:[];
-  const $=id=>document.getElementById(id);
-  let attachFrame=0;
-  function cleanUrl(v){let s=String(v||'').trim();if(!s)throw new Error('Captura la URL de Firebase.');s=s.replace(/\.json\/?$/i,'').replace(/\/+$/,'');let u;try{u=new URL(s)}catch(_e){throw new Error('La URL no es válida. Debe iniciar con https://');}if(!/^https?:$/.test(u.protocol))throw new Error('La URL debe usar https://');if(u.search||u.hash)throw new Error('La URL no debe contener parámetros ni fragmentos.');return s;}
-  function cfg(){try{if(typeof window.mxViewerGetCfg==='function')return window.mxViewerGetCfg();}catch(_e){}return{db:'',branch:'HGAM'};}
-  function createButton(){let b=$('mxUrlHelpButton');if(b)return b;b=document.createElement('button');b.type='button';b.id='mxUrlHelpButton';b.className='mx-url-help-btn';b.textContent='?';b.title='Ver o cambiar URL de Firebase';b.setAttribute('aria-label','Ver o cambiar URL de Firebase');b.onclick=openModal;return b;}
-  function createSlot(){let slot=$('mxUrlHelpSlot');if(slot)return slot;slot=document.createElement('span');slot.id='mxUrlHelpSlot';slot.className='mx-url-help-slot';slot.setAttribute('aria-label','Administración de conexión');return slot;}
-  function ensureModal(){let o=$('mxUrlManagerOverlay');if(o)return o;o=document.createElement('div');o.id='mxUrlManagerOverlay';o.className='mx-url-hidden';o.innerHTML=`<div class="mx-url-card" role="dialog" aria-modal="true" aria-labelledby="mxUrlTitle"><div class="mx-url-head"><div><h3 id="mxUrlTitle">Conexión de ${APP}</h3><p>Consulta o cambia la base de datos utilizada por este visor.</p></div><button type="button" id="mxUrlClose" class="mx-url-close" aria-label="Cerrar">×</button></div><div class="mx-url-body"><label class="mx-url-label" for="mxUrlInput">URL conectada</label><div class="mx-url-line"><input id="mxUrlInput" readonly spellcheck="false" autocomplete="off"><button type="button" id="mxUrlEdit" class="mx-url-pencil" title="Editar URL" aria-label="Editar URL">✏️</button></div><div class="mx-url-branch" id="mxUrlBranch"></div><div class="mx-url-note">Al guardar una URL distinta, el visor cerrará la sesión, validará nuevamente la licencia en esa base y solicitará usuario y contraseña. El acceso guardado dura 24 horas.</div><div class="mx-url-status" id="mxUrlStatus"></div></div><div class="mx-url-actions"><button type="button" id="mxUrlCancel" class="mx-url-cancel">Cerrar</button><button type="button" id="mxUrlSave" class="mx-url-save" disabled>Guardar y volver a acceder</button></div></div>`;document.body.appendChild(o);
-    const input=$('mxUrlInput'),save=$('mxUrlSave'),status=$('mxUrlStatus');
-    $('mxUrlEdit').onclick=()=>{input.readOnly=false;input.focus();input.select();save.disabled=false;status.className='mx-url-status';status.textContent='Edición habilitada. Al guardar se cerrará la sesión actual.';};
-    input.addEventListener('input',()=>{save.disabled=false;status.className='mx-url-status';status.textContent='';});
-    $('mxUrlClose').onclick=$('mxUrlCancel').onclick=closeModal;save.onclick=saveAndReload;o.addEventListener('click',e=>{if(e.target===o)closeModal();});return o;
-  }
-  function openModal(){const o=ensureModal(),c=cfg(),input=$('mxUrlInput');input.value=String(c.db||'');input.readOnly=true;$('mxUrlSave').disabled=true;$('mxUrlBranch').textContent='ID unidad (licencia principal): '+String(c.branch||'HGAM').toUpperCase();$('mxUrlStatus').className='mx-url-status';$('mxUrlStatus').textContent='La URL está bloqueada. Presiona el lápiz para editarla.';o.classList.remove('mx-url-hidden');}
-  function closeModal(){const o=ensureModal(),input=$('mxUrlInput'),current=String(cfg().db||'').replace(/\/+$/,'');if(!input.readOnly&&String(input.value||'').trim().replace(/\/+$/,'')!==current){saveAndReload();return;}o.classList.add('mx-url-hidden');}
-  function clearAccess(){for(const key of CLEAR_KEYS){try{localStorage.removeItem(key);}catch(_e){}}try{sessionStorage.clear();}catch(_e){}window.__mxViewerSalidaAuth=null;}
-  function saveAndReload(){const status=$('mxUrlStatus'),current=cfg();let next;try{next=cleanUrl($('mxUrlInput').value);}catch(e){status.className='mx-url-status bad';status.textContent=e.message;return;}const old=String(current.db||'').replace(/\/+$/,'');if(next===old){status.className='mx-url-status ok';status.textContent='La URL no cambió.';setTimeout(()=>ensureModal().classList.add('mx-url-hidden'),450);return;}if(!confirm('¿Guardar esta URL y cerrar la sesión actual?\n\n'+next+'\n\nEl visor volverá a validar licencia y solicitará acceso.'))return;try{if(typeof window.mxViewerSaveCfg!=='function')throw new Error('Este visor no tiene habilitado el guardado dinámico de URL.');window.mxViewerSaveCfg({db:next,branch:current.branch||'HGAM'},true);clearAccess();status.className='mx-url-status ok';status.textContent='URL guardada. Reiniciando el visor...';setTimeout(()=>{alert('URL guardada correctamente. El visor solicitará nuevamente el acceso con contraseña.');location.reload();},500);}catch(e){status.className='mx-url-status bad';status.textContent=e.message||String(e);}}
-  function isVisible(el){if(!el||!el.isConnected)return false;for(let node=el;node&&node!==document.documentElement;node=node.parentElement){if(node.hidden)return false;const style=getComputedStyle(node);if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0)return false;}return true;}
-  function rectsOverlap(a,b,pad=5){return!(a.right+pad<=b.left||a.left>=b.right+pad||a.bottom+pad<=b.top||a.top>=b.bottom+pad);}
-  function placeFloating(slot){slot.className='mx-url-help-slot mx-url-floating-slot';if(slot.parentElement!==document.body)document.body.appendChild(slot);const candidates=[{top:'10px',right:'10px'},{top:'10px',left:'10px'},{bottom:'34px',left:'10px'},{bottom:'34px',right:'10px'}];const blockers=[...document.querySelectorAll('button,a[href],input,select,[role="button"]')].filter(el=>el!==slot&&!slot.contains(el)&&!el.closest('#mxUrlManagerOverlay')&&isVisible(el));for(const c of candidates){slot.style.cssText='';slot.className='mx-url-help-slot mx-url-floating-slot';Object.assign(slot.style,c);const r=slot.getBoundingClientRect();if(!blockers.some(el=>rectsOverlap(r,el.getBoundingClientRect())))return;}slot.style.cssText='left:10px;bottom:34px';}
-  function attachButton(){if(!document.body)return;const button=createButton(),slot=createSlot();if(button.parentElement!==slot)slot.appendChild(button);document.querySelectorAll('.mx-url-help-btn').forEach(el=>{if(el!==button)el.remove();});document.querySelectorAll('.mx-url-help-slot').forEach(el=>{if(el!==slot)el.remove();});
-    const gateSelectors=['#loginGate .gate-card','#activationGate .gate-card','#mxViewerSalidaAuth .mx-vsa-card','#mxViewerActivationGate .mx-va-card'];
-    const gateCard=gateSelectors.map(sel=>document.querySelector(sel)).find(isVisible);
-    if(gateCard){if(slot.className!=='mx-url-help-slot mx-url-gate-slot')slot.className='mx-url-help-slot mx-url-gate-slot';if(slot.hasAttribute('style'))slot.removeAttribute('style');if(slot.parentElement!==gateCard)gateCard.insertBefore(slot,gateCard.firstChild);return;}
-    const logout=[$('logoutBtn'),$('btnViewerLogout')].find(isVisible);const anchor=logout?.parentElement||['.top-actions','.top .top-actions','.topbar .top-actions','.top > div:last-child','.topbar > div:last-child'].map(sel=>document.querySelector(sel)).find(isVisible);
-    if(anchor){if(slot.className!=='mx-url-help-slot mx-url-header-slot')slot.className='mx-url-help-slot mx-url-header-slot';if(slot.hasAttribute('style'))slot.removeAttribute('style');if(logout&&logout.parentElement===anchor){if(slot.parentElement!==anchor||slot.nextSibling!==logout)anchor.insertBefore(slot,logout);}else if(slot.parentElement!==anchor)anchor.appendChild(slot);return;}
-    placeFloating(slot);
-  }
-  function scheduleAttach(){if(attachFrame)return;attachFrame=requestAnimationFrame(()=>{attachFrame=0;attachButton();});}
-  function init(){ensureModal();scheduleAttach();const observer=new MutationObserver(mutations=>{const slot=$('mxUrlHelpSlot'),button=$('mxUrlHelpButton');if(mutations.every(m=>m.target===slot||m.target===button||slot?.contains(m.target)))return;scheduleAttach();});observer.observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','style','hidden']});window.addEventListener('resize',scheduleAttach);window.addEventListener('orientationchange',scheduleAttach);window.addEventListener('mx-viewer-config-changed',()=>{const d=$('mxConnectionDiagnostic');if(d){const c=cfg();d.textContent='Firebase: '+String(c.db||'SIN URL').replace(/\/+$/,'')+' · '+String(c.branch||'HGAM').toUpperCase();}scheduleAttach();});}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
-})();
-</script>
-
 <script id="mx-viewer-auto-refresh-v112">
 (function(){
   'use strict';
