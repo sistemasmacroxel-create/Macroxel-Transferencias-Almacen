@@ -957,30 +957,26 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
       if(meta?.seq)localStorage.setItem(SEQ_KEY,String(meta.seq));
     }
     const byClave=new Map(Object.values(totals||{}).filter(Boolean).map(r=>[norm(r.c),r]));
-    const items=catalog.map(p=>{const r=byClave.get(norm(p.clave))||{};return{clave:norm(p.clave),descripcion:txt(p.descripcion),existencia:num(r.e),almacen:num(r.a),estantes:num(r.s),lotes:num(r.l),singleLot:convertSingle(r,txt(p.descripcion))};});
+    const items=catalog.map(p=>{const r=byClave.get(norm(p.clave))||{};return{clave:norm(p.clave),descripcion:txt(p.descripcion),existencia:num(r.e),almacen:num(r.a),estantes:num(r.s),lotes:num(r.l),seq:num(r.seq),singleLot:convertSingle(r,txt(p.descripcion))};});
     return{items,updatedAt:meta?.updatedAt,updatedAtText:meta?.updatedAtText||'CPM local / sin cambios remotos'};
   }
-  const LOT_CACHE=new Map();
-  async function requestLots(clave,force=false){
-    const key=norm(clave),cached=LOT_CACHE.get(key);
-    if(!force&&cached&&Date.now()-cached.at<30000)return cached.items;
-    const c=cfg(),id='lot_'+Date.now()+'_'+Math.random().toString(36).slice(2,9),body={id,status:'pending',clave:key,createdAt:new Date().toISOString()};
-    await put('/inventory_lot_queries/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id),body);
-    for(let i=0;i<40;i++){
-      await new Promise(r=>setTimeout(r,i===0?120:250));
-      const resp=await get('/inventory_lot_responses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id)).catch(()=>null);
-      if(resp?.status==='done'&&Array.isArray(resp.items)){
-        LOT_CACHE.set(key,{at:Date.now(),items:resp.items});
-        Promise.allSettled([
-          put('/inventory_lot_queries/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id),null),
-          put('/inventory_lot_responses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id),null)
-        ]);
-        return resp.items;
-      }
+  const LOT_CACHE=new Map(),LOT_STORE_KEY='mx_visor_lots_direct_cache_v2';
+  const safeLotKey=v=>{try{return btoa(unescape(encodeURIComponent(norm(v)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}catch(_e){return norm(v).replace(/[.#$\[\]\/]/g,'_')}};
+  function readLotStore(){try{const x=JSON.parse(localStorage.getItem(LOT_STORE_KEY)||'{}');return x&&typeof x==='object'?x:{}}catch(_e){return{}}}
+  function writeLotStore(store){try{const rows=Object.entries(store||{}).sort((a,b)=>num(b[1]?.at)-num(a[1]?.at)).slice(0,100);localStorage.setItem(LOT_STORE_KEY,JSON.stringify(Object.fromEntries(rows)))}catch(_e){}}
+  function parseLotPayload(payload,clave){const rows=Array.isArray(payload?.items)?payload.items:[];return rows.map(a=>Array.isArray(a)?{inventoryId:txt(a[0]),clave:norm(payload?.c||clave),lote:txt(a[1]),caducidad:txt(a[2]),codigo_barras:txt(a[3]),almacen:num(a[4]),estantes:num(a[5]),unidad:txt(a[6]),existencia:num(a[4])+num(a[5])}:{...a,clave:norm(a?.clave||clave),almacen:num(a?.almacen),estantes:num(a?.estantes),existencia:num(a?.existencia)||num(a?.almacen)+num(a?.estantes)}).filter(x=>(num(x.almacen)+num(x.estantes))>0)}
+  async function requestLots(clave,force=false,expectedSeq=0){
+    const key=norm(clave),branch=encodeURIComponent(cfg().branch),storeKey=cfg().branch+'|'+key,mem=LOT_CACHE.get(key),store=readLotStore(),disk=store[storeKey],fresh=x=>x&&Array.isArray(x.items)&&(!expectedSeq||num(x.v)>=num(expectedSeq));
+    if(!force&&fresh(mem))return mem.items;if(!force&&fresh(disk)){LOT_CACHE.set(key,disk);return disk.items}
+    try{
+      const payload=await get('/inventory_lots_by_key/'+branch+'/'+safeLotKey(key));
+      const items=parseLotPayload(payload,key),entry={v:num(payload?.v)||num(expectedSeq),at:Date.now(),items};LOT_CACHE.set(key,entry);store[storeKey]=entry;writeLotStore(store);return items;
+    }catch(e){
+      const stale=mem||disk;if(stale&&Array.isArray(stale.items)){LOT_CACHE.set(key,stale);return stale.items}
+      throw new Error('No se pudieron actualizar los lotes. Revisa la conexión e intenta nuevamente.');
     }
-    throw new Error('Macroxel no respondió la consulta de lotes.');
   }
-  function clearLotCache(clave){if(clave)LOT_CACHE.delete(norm(clave));else LOT_CACHE.clear();}
+  function clearLotCache(clave){const store=readLotStore();if(clave){const key=norm(clave);LOT_CACHE.delete(key);delete store[cfg().branch+'|'+key]}else{LOT_CACHE.clear();for(const k of Object.keys(store))if(k.startsWith(cfg().branch+'|'))delete store[k]}writeLotStore(store)}
   window.mxCpmCache={sync:syncStocks,syncCatalog,requestLots,clearLotCache,getLocal:()=>read(CAT_KEY,ensureDefault())};
   function warm(){if(!window.__mxViewerLicensed)return;syncCatalog().then(()=>syncStocks(false)).catch(()=>{});}
   window.addEventListener('mx-viewer-licensed',warm);window.addEventListener('online',warm);
@@ -1023,7 +1019,7 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
     if(num(p.lotes)===1&&p.singleLot&&available(p.singleLot)>0){openQty(p.singleLot);return;}
     try{
       $('transferInventoryStatus').textContent=`Consultando lotes de ${p.clave}...`;
-      let rows=await window.mxCpmCache.requestLots(p.clave);
+      let rows=await window.mxCpmCache.requestLots(p.clave,false,p.seq);
       rows=(rows||[]).filter(r=>available(r)>0);
       if(!rows.length){setStatus(`No hay lotes disponibles en ${d.fromLabel}.`,'bad');return;}
       if(rows.length===1){openQty(Object.assign({},rows[0],{descripcion:p.descripcion||rows[0].descripcion}));return;}
@@ -1205,7 +1201,7 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
     if(direction().code!=='A2E'){if(cart.length)throw new Error('Vacía el carrito antes de agregar un Pedido de farmacia.');$('transferDirection').value='A2E';lastDirection='A2E';updateDirectionUi();}
     await loadLots(false);const clave=norm(order?.clave||order?.c),wanted=Math.max(1,Math.ceil(num(order?.pzsRecomendadas||order?.recommended||order?.pzs)));
     const product=products.find(r=>norm(r.clave)===clave);if(!product)throw new Error('La clave no existe en el CPM sincronizado.');
-    let lots=[];if(product.singleLot&&num(product.singleLot.almacen)>0)lots=[Object.assign({},product.singleLot,{descripcion:product.descripcion})];else lots=await window.mxCpmCache.requestLots(clave,false);
+    let lots=[];if(product.singleLot&&num(product.singleLot.almacen)>0)lots=[Object.assign({},product.singleLot,{descripcion:product.descripcion})];else lots=await window.mxCpmCache.requestLots(clave,false,product.seq);
     lots=(lots||[]).filter(r=>num(r.almacen)>0).sort((a,b)=>String(a.caducidad||'9999').localeCompare(String(b.caducidad||'9999')));if(!lots.length)throw new Error('No hay existencia disponible en Almacén para surtir esta clave.');
     let remaining=wanted,added=0;for(const lot of lots){if(remaining<=0)break;const key=cartKey(lot),found=cart.find(x=>cartKey(x)===key),reserved=num(found?.pzs),available=Math.max(0,num(lot.almacen)-reserved),take=Math.min(remaining,available);if(take<=0)continue;if(found)found.pzs+=take;else cart.push(Object.assign({},lot,{descripcion:lot.descripcion||product.descripcion,pzs:take}));remaining-=take;added+=take;}
     renderCart();if(!added)throw new Error('Las existencias de Almacén ya están reservadas en el carrito.');setStatus(remaining>0?`Se agregaron ${added} pzs; faltan ${remaining} por falta de Almacén.`:`Pedido agregado al carrito: ${added} pzs.` ,remaining>0?'':'ok');return{added,remaining};
