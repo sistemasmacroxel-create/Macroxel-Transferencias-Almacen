@@ -3,7 +3,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>MACROXEL Transferencias v1.0.0</title>
 <!-- CPM predeterminado integrado: archivo autónomo para GitHub Pages -->
 <script id="mx-cpm-default-integrado">
@@ -466,6 +466,11 @@ async function adoptLegacy(current,opts={}){if(appState(current,opts.appCode)===
 window.mxUnifiedActivation={txt,norm,code,label,deviceId,keyOf,baseState,applications,appState,cleanPerson,samePerson,prepareRequest,touchPatch,legacyIds,adoptLegacy};
 })();
 </script>
+
+<style id="mx-no-auto-zoom-v100">
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+@media (max-width:900px){input,select,textarea,[contenteditable="true"]{font-size:16px!important}}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -661,7 +666,7 @@ window.mxUnifiedActivation={txt,norm,code,label,deviceId,keyOf,baseState,applica
 <div class="history-head">
 <div>
 <h3 style="margin:0">🧾 Historial de transferencias</h3>
-<div class="muted" style="margin-top:4px">Solicitudes y transferencias generadas desde este dispositivo.</div>
+<div class="muted" style="margin-top:4px">Últimos 8 días. Los registros anteriores se eliminan automáticamente de este visor.</div>
 </div>
 <button id="btnDeleteTransferHistory" type="button" class="btn-danger history-delete">🗑️ Eliminar historial</button>
 </div>
@@ -783,6 +788,7 @@ window.mxUnifiedActivation={txt,norm,code,label,deviceId,keyOf,baseState,applica
   const num=v=>{const n=Number(v||0);return Number.isFinite(n)?n:0};
   function ymd(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
   function parseMxDate(v){const s=String(v||'').trim();if(!s)return null;let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1],12);m=s.match(/^(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);if(m)return new Date(+m[1],+m[2]-1,+m[3],12);const d=new Date(s);return Number.isNaN(d.getTime())?null:d;}
+  function recent8(row={}){const d=parseMxDate(row.fechaIso||row.createdAt||row.fechaTexto||row.fecha);if(!d)return true;const min=new Date();min.setHours(0,0,0,0);min.setDate(min.getDate()-7);return d>=min;}
   function normalizeDb(v){let s=String(v||'').trim().replace(/\.json\/?$/i,'').replace(/\/+$/,'');if(!s)return'';try{const u=new URL(s);if(!/^https?:$/.test(u.protocol))throw new Error();}catch(_e){return'';}return s;}
   function loadCfg(){let saved=null;try{saved=JSON.parse(localStorage.getItem(LS)||'null');}catch(_e){}const db=normalizeDb(saved?.db||DEFAULTS.db),branch=String(saved?.branch||DEFAULTS.branch).trim().toUpperCase()||DEFAULTS.branch;return{db,branch};}
   function saveCfg(c){const clean={db:normalizeDb(c?.db||DEFAULTS.db),branch:String(c?.branch||DEFAULTS.branch).trim().toUpperCase()||DEFAULTS.branch};try{localStorage.setItem(LS,JSON.stringify(clean));}catch(_e){}return clean;}
@@ -834,10 +840,10 @@ window.mxUnifiedActivation={txt,norm,code,label,deviceId,keyOf,baseState,applica
       throw e;
     }
   }
-  async function fetchData(){const c=getCfg();$('pillUpdated').textContent='Consultando pacientes...';await testConnection();await loadPatientList();raw=[];filtered=[];selectedKey='';selectedName='';selectedExp='';$('pillUpdated').textContent=patientCatalog.length?'Últimos 15 días · lista actualizada':'Últimos 15 días · sin pacientes';renderPatients();applyFilters();}
+  async function fetchData(){const c=getCfg();$('pillUpdated').textContent='Consultando pacientes...';await testConnection();await loadPatientList();raw=[];filtered=[];selectedKey='';selectedName='';selectedExp='';$('pillUpdated').textContent=patientCatalog.length?'Últimos 8 días · lista actualizada':'Últimos 8 días · sin pacientes';renderPatients();applyFilters();}
   async function loadPatientList(){const c=getCfg(),data=await fetchJson('/antibiotic_patient_list/'+encodeURIComponent(c.branch));patientCatalog=(Array.isArray(data?.patients)?data.patients:[]).map(p=>({key:String(p.key||'').trim(),nombre:String(p.nombre||'').trim(),expediente:String(p.expediente||'').trim(),totalPzs:num(p.totalPzs),registros:num(p.registros),foliosCount:num(p.foliosCount??(Array.isArray(p.folios)?p.folios.length:0)),medicamentosCount:num(p.medicamentosCount??(Array.isArray(p.medicamentos)?p.medicamentos.length:0)),ultimaFecha:String(p.ultimaFecha||'')})).filter(p=>p.key&&p.nombre).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')||a.expediente.localeCompare(b.expediente,'es'));}
   function makeQueryId(){return'req_'+Date.now()+'_'+Math.random().toString(36).slice(2,9)}
-  async function sendPatientQuery(){const c=getCfg();if(!selectedKey){raw=[];filtered=[];applyFilters();$('pillUpdated').textContent='Selecciona un paciente';return false;}raw=[];filtered=[];renderTable();renderKpis();$('pillUpdated').textContent='Consultando historial publicado...';try{const direct=await fetchJson('/antibiotic_patient_history/'+encodeURIComponent(c.branch));const node=direct?.patients?.[selectedKey]||Object.values(direct?.patients||{}).find(x=>String(x?.key||'')===selectedKey);if(node&&Array.isArray(node.items)){raw=node.items;$('pillUpdated').textContent='Historial sincronizado · últimos 15 días';applyFilters();if(raw.length)return true;}}catch(_e){}const id=makeQueryId(),body={id,status:'pending',sucursal:c.branch,createdAt:new Date().toISOString(),patientKey:selectedKey,patient:selectedName,expediente:selectedExp,from:'',to:''};try{await putJson('/antibiotic_patient_queries/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id),body);$('pillUpdated').textContent='Actualizando desde el sistema principal...';for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,750));const resp=await fetchJson('/antibiotic_patient_responses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id)).catch(()=>null);if(resp&&Array.isArray(resp.items)){raw=resp.items;$('pillUpdated').textContent='Respuesta actualizada · últimos 15 días';applyFilters();return true;}}}catch(_e){}applyFilters();$('pillUpdated').textContent=raw.length?'Historial publicado':'Sin movimientos publicados';return raw.length>0;}
+  async function sendPatientQuery(){const c=getCfg();if(!selectedKey){raw=[];filtered=[];applyFilters();$('pillUpdated').textContent='Selecciona un paciente';return false;}raw=[];filtered=[];renderTable();renderKpis();$('pillUpdated').textContent='Consultando historial publicado...';try{const direct=await fetchJson('/antibiotic_patient_history/'+encodeURIComponent(c.branch));const node=direct?.patients?.[selectedKey]||Object.values(direct?.patients||{}).find(x=>String(x?.key||'')===selectedKey);if(node&&Array.isArray(node.items)){raw=node.items.filter(recent8);$('pillUpdated').textContent='Historial sincronizado · últimos 8 días';applyFilters();if(raw.length)return true;}}catch(_e){}const id=makeQueryId(),body={id,status:'pending',sucursal:c.branch,createdAt:new Date().toISOString(),patientKey:selectedKey,patient:selectedName,expediente:selectedExp,from:'',to:''};try{await putJson('/antibiotic_patient_queries/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id),body);$('pillUpdated').textContent='Actualizando desde el sistema principal...';for(let i=0;i<12;i++){await new Promise(r=>setTimeout(r,750));const resp=await fetchJson('/antibiotic_patient_responses/'+encodeURIComponent(c.branch)+'/'+encodeURIComponent(id)).catch(()=>null);if(resp&&Array.isArray(resp.items)){raw=resp.items.filter(recent8);$('pillUpdated').textContent='Respuesta actualizada · últimos 8 días';applyFilters();return true;}}}catch(_e){}applyFilters();$('pillUpdated').textContent=raw.length?'Historial publicado':'Sin movimientos publicados';return raw.length>0;}
 function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||'')===selectedKey||(!x.patientKey&&norm(x.paciente)===norm(selectedName)&&(!selectedExp||norm(x.expediente)===norm(selectedExp)))):[];renderPatients();renderTable();renderKpis();}
   function renderKpis(){const pats=new Set(filtered.map(x=>x.patientKey||x.paciente)),fol=new Set(filtered.map(x=>x.folio).filter(Boolean));if($('kPatients'))$('kPatients').textContent=pats.size;if($('kRows'))$('kRows').textContent=filtered.length;if($('kPzs'))$('kPzs').textContent=filtered.reduce((a,b)=>a+num(b.pzs),0);if($('kFolios'))$('kFolios').textContent=fol.size;}
   function renderPatients(){const q=norm($('q').value),list=patientCatalog.filter(p=>!q||norm(p.nombre).includes(q)||norm(p.expediente).includes(q));$('patientList').innerHTML=list.length?list.map(p=>`<button class="patient ${selectedKey===p.key?'active':''}" data-key="${esc(p.key)}"><div class="name">${esc(p.nombre)}</div><div class="meta">${p.expediente?'Exp. '+esc(p.expediente)+' · ':''}${p.totalPzs} pzs · ${p.foliosCount} folios · ${p.medicamentosCount} medicamentos${p.ultimaFecha?' · Último '+esc(p.ultimaFecha):''}</div></button>`).join(''):'<div class="empty">Sin pacientes</div>';document.querySelectorAll('.patient').forEach(b=>b.onclick=()=>{const p=patientCatalog.find(x=>x.key===b.dataset.key);if(!p)return;selectedKey=p.key;selectedName=p.nombre;selectedExp=p.expediente;$('q').value=p.nombre+(p.expediente?' · '+p.expediente:'');sendPatientQuery().catch(e=>{$('pillUpdated').textContent='Error: '+e.message;setFirebaseStatus(false,'Sin acceso a Firebase');});});}
@@ -987,7 +993,11 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
   let products=[],loaded=false,cart=[],selectedItem=null,searchTimer=0,responseWatchers=new Set(),lastDirection='';
   const cfg=()=>window.mxViewerGetCfg?window.mxViewerGetCfg():{db:'',branch:'HGAM'};
   const fetchJson=path=>window.mxViewerFetchJson(path),putJson=(path,data)=>window.mxViewerPutJson(path,data);
-  function loadHistory(){try{const x=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');return Array.isArray(x)?x:[];}catch(_e){return[];}}function saveHistory(rows){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(rows.slice(0,80)));}catch(_e){}}
+  const HISTORY_DAYS=8,HISTORY_DAY_MS=86400000;
+  function historyCutoff(){const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(HISTORY_DAYS-1));return d.getTime();}
+  function historyStamp(row={}){for(const v of [row.createdAt,row.updatedAt,row.appliedAt,row.completedAt,row.fecha]){const t=Date.parse(txt(v));if(Number.isFinite(t))return t;}return Date.now();}
+  function pruneHistory(rows){const cutoff=historyCutoff();return (Array.isArray(rows)?rows:[]).filter(r=>historyStamp(r)>=cutoff);}
+  function loadHistory(){try{const raw=JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]'),rows=Array.isArray(raw)?raw:[],clean=pruneHistory(rows);if(clean.length!==rows.length)localStorage.setItem(HISTORY_KEY,JSON.stringify(clean.slice(0,80)));return clean;}catch(_e){return[];}}function saveHistory(rows){try{localStorage.setItem(HISTORY_KEY,JSON.stringify(pruneHistory(rows).slice(0,80)));}catch(_e){}}
   function updateHistory(record){const rows=loadHistory(),i=rows.findIndex(x=>x.id===record.id);if(i>=0)rows[i]=Object.assign({},rows[i],record);else rows.unshift(record);saveHistory(rows);renderHistory();}
   function makeId(){return`tr_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;}function makeRequestFolio(){const d=new Date(),b=norm(cfg().branch).replace(/[^A-Z0-9]/g,'').slice(0,12)||'HGAM';return`SOL-${b}-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}-${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}${String(d.getSeconds()).padStart(2,'0')}-${Math.random().toString(36).slice(2,6).toUpperCase()}`;}
   function formatDate(v){const d=new Date(v);return Number.isNaN(d.getTime())?txt(v):d.toLocaleString('es-MX');}function cartKey(x){return[norm(x.clave),norm(x.codigo_barras),norm(x.lote),norm(x.caducidad)].join('|');}function setStatus(m,k=''){const el=$('transferSendStatus');if(!el)return;el.textContent=m;el.style.color=k==='bad'?'#991b1b':k==='ok'?'#166534':'#64748b';el.style.fontWeight=k?'800':'normal';}
