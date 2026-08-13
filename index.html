@@ -848,6 +848,7 @@ async function mxTrBumpVersion(path){const p=String(path||'');const key=p.includ
       const r=await fetch(restUrl(path,false),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
       if(!r.ok)throw new Error('Firebase HTTP '+r.status);
       if(window.__mxViewerLicensed)setFirebaseStatus(true,'Conectado');
+      try{mxTrBumpVersion(path)}catch(_e){}
       return true;
     }catch(e){
       if(window.__mxViewerLicensed)setFirebaseStatus(false,'Sin conexión');
