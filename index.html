@@ -161,7 +161,7 @@ th{font-size:10px;}
 
 <style id="mx-pedido-farmacia-v1018-style">
 #pharmacyOrdersView{margin-top:10px}.po-head{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap}.po-tools{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-top:10px;align-items:end}.po-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}.po-kpi{border:1px solid var(--line);border-radius:14px;padding:10px;background:#f8fbff}.po-kpi b{display:block;font-size:20px;margin-top:3px}.po-table table{min-width:1000px}.po-rec{font-size:18px;font-weight:950;color:#1d4ed8}.po-stock-ok{color:#166534;font-weight:900}.po-stock-zero{color:#b91c1c;font-weight:900}.po-row-actions{display:flex;gap:6px;flex-wrap:wrap}.po-muted{font-size:11px;color:#64748b}.po-alert{padding:9px 11px;border:1px solid #bfdbfe;border-radius:12px;background:#eff6ff;color:#1e3a8a;font-size:12px;font-weight:700;margin-top:8px}
-@media(max-width:760px){.viewer-tabs.mx-salidas-tabs{grid-template-columns:1fr}.po-tools,.po-kpis{grid-template-columns:1fr}.po-table{max-height:65vh;overflow:auto}}
+@media(max-width:760px){.viewer-tabs.mx-salidas-tabs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:3px!important;padding:3px!important}.viewer-tabs.mx-salidas-tabs .viewer-tab{width:100%!important;min-width:0!important;min-height:28px!important;padding:5px 2px!important;font-size:9px!important;line-height:1.05!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}.po-tools,.po-kpis{grid-template-columns:1fr}.po-table{max-height:65vh;overflow:auto}}
 </style>
 </style>
 
@@ -511,9 +511,9 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div class="viewer-tabs mx-salidas-tabs">
 <button id="tabPatients" class="viewer-tab" type="button">Pacientes</button>
 <button id="tabInventory" class="viewer-tab" type="button">Existencias</button>
-<button id="tabTransfer" class="viewer-tab" type="button">🔁 Transferencias</button>
-<button id="tabPharmacyOrders" class="viewer-tab" type="button">📋 Pedido de farmacia</button>
-<button id="tabTransferHistory" class="viewer-tab" type="button">🧾 Historial de transferencias</button>
+<button id="tabTransfer" class="viewer-tab" type="button" title="Transferencias">🔁 Transferencias</button>
+<button id="tabPharmacyOrders" class="viewer-tab" type="button" title="Pedido de farmacia">📋 Pedido farmacia</button>
+<button id="tabTransferHistory" class="viewer-tab" type="button" title="Historial de transferencias">🧾 Historial</button>
 </div>
 <section id="patientsView">
 <div class="card grid filters">
