@@ -344,10 +344,35 @@ th{font-size:10px;}
 }
 </style>
 
-<style id="mx-floating-cart-v1023">
+<style id="mx-floating-cart-v1024">
 #transferCartPanel{scroll-margin-top:78px}
 #mxFloatingCartButton{display:none}
 @media(max-width:850px){
+  body.mx-transfer-cart-open{overflow:hidden!important;overscroll-behavior:none}
+  #transferCartPanel{
+    display:none;
+    position:fixed!important;
+    inset:0!important;
+    z-index:8990!important;
+    width:100vw!important;
+    height:100dvh!important;
+    max-width:none!important;
+    max-height:none!important;
+    margin:0!important;
+    padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(76px + env(safe-area-inset-bottom,0px))!important;
+    border:0!important;
+    border-radius:0!important;
+    background:#fff!important;
+    box-shadow:none!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+  }
+  #transferCartPanel.mx-cart-open{display:block!important}
+  #transferCartPanel .cart-list{max-height:none!important;overflow:visible!important}
+  #transferCartPanel.mx-cart-open h3{font-size:16px}
+  #transferCartPanel.mx-cart-open .cart-item{padding:10px}
+  #transferCartPanel.mx-cart-open .cart-total{position:sticky;bottom:62px;z-index:2;background:#eef2ff}
+  #transferCartPanel.mx-cart-open .btn-finish{position:sticky;bottom:10px;z-index:3;box-shadow:0 8px 22px rgba(5,150,105,.22)}
   #mxFloatingCartButton{
     position:fixed;
     right:10px;
@@ -376,6 +401,7 @@ th{font-size:10px;}
     transform:translateY(0) scale(1);
     pointer-events:auto;
   }
+  #mxFloatingCartButton.mx-cart-open{background:linear-gradient(145deg,#102a43,#0b3d69)}
   #mxFloatingCartButton:active{transform:scale(.94)}
   #mxFloatingCartButton:hover{filter:brightness(1.06)}
   .mx-fcart-icon{font-size:21px;line-height:1}
@@ -399,15 +425,9 @@ th{font-size:10px;}
     box-shadow:0 4px 10px rgba(127,29,29,.28);
   }
   .mx-fcart-count[hidden]{display:none!important}
-  #transferCartPanel.mx-cart-focus{
-    animation:mxCartFocus .75s ease;
-  }
-}
-@keyframes mxCartFocus{
-  0%,100%{box-shadow:0 10px 24px rgba(2,6,23,.08)}
-  45%{box-shadow:0 0 0 4px rgba(37,99,235,.22),0 14px 32px rgba(2,6,23,.16)}
 }
 @media(max-width:430px){
+  #transferCartPanel{padding-left:9px!important;padding-right:9px!important}
   #mxFloatingCartButton{
     right:7px;
     bottom:calc(9px + env(safe-area-inset-bottom,0px));
@@ -756,7 +776,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div class="qty-conversion-grid">
 <div>
 <label>Cantidad a transferir</label>
-<input id="transferQtyInput" type="number" min="1" step="1" value="1" inputmode="numeric">
+<input id="transferQtyInput" type="text" value="1" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done">
 </div>
 </div>
 <div class="qty-conversion-summary" id="transferConversionSummary">Captura directamente la cantidad final que deseas transferir.</div>
@@ -991,7 +1011,7 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
   if(window.__mxVisorTransferenciasV101)return;window.__mxVisorTransferenciasV101=true;
   const HISTORY_KEY='mx_visor_transfer_history_v2',REQUESTER_KEY='mx_visor_transfer_requester_v1',DIRECTION_KEY='mx_visor_transfer_direction_v1022';
   const $=id=>document.getElementById(id),txt=v=>String(v==null?'':v).trim(),num=v=>{const n=Number(v);return Number.isFinite(n)?n:0;},norm=v=>txt(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().replace(/\s+/g,' '),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  let products=[],loaded=false,cart=[],selectedItem=null,searchTimer=0,responseWatchers=new Set(),lastDirection='',transferSearchSelectArmed=false,transferSearchKeyboardMode='numeric';
+  let products=[],loaded=false,cart=[],selectedItem=null,searchTimer=0,responseWatchers=new Set(),lastDirection='',transferSearchSelectArmed=false,transferSearchKeyboardMode='numeric',transferQtySelectArmed=false;
   const cfg=()=>window.mxViewerGetCfg?window.mxViewerGetCfg():{db:'',branch:'HGAM'};
   const fetchJson=path=>window.mxViewerFetchJson(path),putJson=(path,data)=>window.mxViewerPutJson(path,data);
   const HISTORY_DAYS=8,HISTORY_DAY_MS=86400000;
@@ -1041,26 +1061,44 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
       :`<div class="empty">No se encontraron productos con existencia en ${esc(d.fromLabel)}.</div>`;
     document.querySelectorAll('[data-prod-i]').forEach(b=>b.onclick=()=>chooseProduct(rows[Number(b.dataset.prodI)]));
   }
+  function transferCartIsMobile(){return window.matchMedia?.('(max-width:850px)')?.matches!==false;}
+  function transferCartIsOpen(){return !!$('transferCartPanel')?.classList.contains('mx-cart-open');}
+  function setTransferCartOpen(open,{focusSearch=true}={}){
+    const panel=$('transferCartPanel'),btn=$('mxFloatingCartButton');
+    if(!panel)return;
+    const mobile=transferCartIsMobile(),next=mobile&&!!open;
+    panel.classList.toggle('mx-cart-open',next);
+    btn?.classList.toggle('mx-cart-open',next);
+    document.body.classList.toggle('mx-transfer-cart-open',next);
+    if(next){panel.scrollTop=0;}
+    else if(focusSearch&&mobile&&!$('transferView')?.classList.contains('mx-hidden')){
+      setTimeout(()=>focusTransferSearchForNextProduct(),80);
+    }
+    updateFloatingCartButton();
+  }
   function updateFloatingCartButton(){
     const btn=$('mxFloatingCartButton'),badge=$('mxFloatingCartCount'),view=$('transferView');
     if(!btn||!badge||!view)return;
     const productsCount=cart.length;
     const pieces=cart.reduce((sum,row)=>sum+num(row.pzs),0);
+    const open=transferCartIsOpen();
     badge.textContent=String(productsCount);
     badge.hidden=productsCount===0;
-    btn.title=productsCount
-      ? `Ir al carrito: ${productsCount} producto${productsCount===1?'':'s'} · ${pieces} pieza${pieces===1?'':'s'}`
-      : 'Ir al carrito';
+    btn.title=open
+      ? 'Minimizar carrito y volver al buscador'
+      : (productsCount
+        ? `Abrir carrito: ${productsCount} producto${productsCount===1?'':'s'} · ${pieces} pieza${pieces===1?'':'s'}`
+        : 'Abrir carrito');
     btn.setAttribute('aria-label',btn.title);
+    btn.setAttribute('aria-expanded',open?'true':'false');
     btn.classList.toggle('show',!view.classList.contains('mx-hidden'));
   }
-  function goToTransferCart(){
-    const panel=$('transferCartPanel');
-    if(!panel)return;
-    panel.scrollIntoView({behavior:'smooth',block:'start'});
-    panel.classList.remove('mx-cart-focus');
-    requestAnimationFrame(()=>panel.classList.add('mx-cart-focus'));
-    setTimeout(()=>panel.classList.remove('mx-cart-focus'),900);
+  function toggleTransferCart(){
+    if(!transferCartIsMobile()){
+      $('transferCartPanel')?.scrollIntoView({behavior:'smooth',block:'start'});
+      return;
+    }
+    setTransferCartOpen(!transferCartIsOpen());
   }
   function inferPackageUnits(item){
     const raw=norm(`${item?.descripcion||''} ${item?.unidad||''}`);
@@ -1101,12 +1139,34 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
       box.textContent=plan.message;help.style.color='#991b1b';help.textContent=plan.message;
     }
   }
+  function transferSelectQtyNow(){
+    const input=$('transferQtyInput');if(!input)return;
+    const len=String(input.value||'').length;
+    try{input.setSelectionRange(0,len,'forward');}catch(_e){try{input.select();}catch(__e){}}
+  }
+  function focusTransferQty(selectContent=true){
+    const input=$('transferQtyInput');if(!input)return;
+    transferQtySelectArmed=!!selectContent;
+    const focusAndSelect=()=>{
+      try{input.focus({preventScroll:true});}catch(_e){input.focus();}
+      if(selectContent)transferSelectQtyNow();
+    };
+    // En móvil el teclado puede reconstruir el campo al abrirse. Reforzamos foco y
+    // selección varias veces para que el "1" quede listo para ser sustituido al teclear.
+    focusAndSelect();
+    requestAnimationFrame(()=>{if(transferQtySelectArmed)transferSelectQtyNow();});
+    [35,90,180,320].forEach(ms=>setTimeout(()=>{
+      if(document.activeElement!==input){try{input.focus({preventScroll:true});}catch(_e){input.focus();}}
+      if(transferQtySelectArmed)transferSelectQtyNow();
+    },ms));
+  }
   function openQty(item){
     const d=direction(),max=available(item);selectedItem=item;
     $('transferQtyProduct').innerHTML=`<b>${esc(item.clave||'')}</b> — ${esc(item.descripcion||'')}<br>Lote: <b>${esc(item.lote||'—')}</b> · Cad: <b>${esc(item.caducidad||'—')}</b><br>${esc(d.fromLabel)} disponible publicado: <b>${max}</b> · Destino: <b>${esc(d.toLabel)}</b>`;
-    $('transferQtyInput').value='1';$('transferQtyInput').removeAttribute('max');$('transferQtyHelp').style.color='';updateQtyTransferSummary();$('transferQtyModal').classList.add('show');setTimeout(()=>{$('transferQtyInput').focus();$('transferQtyInput').select();},30);
+    const qty=$('transferQtyInput');qty.value='1';qty.setAttribute('inputmode','numeric');qty.setAttribute('pattern','[0-9]*');$('transferQtyHelp').style.color='';updateQtyTransferSummary();$('transferQtyModal').classList.add('show');
+    setTimeout(()=>focusTransferQty(true),20);
   }
-  function closeQty(){selectedItem=null;$('transferQtyModal').classList.remove('show');}
+  function closeQty(){transferQtySelectArmed=false;selectedItem=null;$('transferQtyModal').classList.remove('show');}
   function transferSelectSearchNow(){
     const q=$('transferQ');if(!q)return;
     const len=String(q.value||'').length;
@@ -1224,7 +1284,7 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
     const request=buildTransferRequest(cart,d,requester,operator);
     if(!request.items.length){setStatus('No hay productos válidos para enviar.','bad');return;}
     $('btnFinalizeTransfer').disabled=true;setStatus('Enviando solicitud...');
-    try{await putJson('/transfer_requests/'+encodeURIComponent(cfg().branch)+'/'+encodeURIComponent(request.id),request);updateHistory(Object.assign({},request,{estado:'pending'}));cart=[];renderCart();setStatus(`Transferencia enviada: ${request.requestFolio}. Macroxel la validará y aplicará automáticamente.`,'ok');watchResponse(request.id);}catch(e){setStatus('No se pudo enviar: '+e.message,'bad');}finally{$('btnFinalizeTransfer').disabled=false;}
+    try{await putJson('/transfer_requests/'+encodeURIComponent(cfg().branch)+'/'+encodeURIComponent(request.id),request);updateHistory(Object.assign({},request,{estado:'pending'}));cart=[];renderCart();setTransferCartOpen(false,{focusSearch:true});setStatus(`Transferencia enviada: ${request.requestFolio}. Macroxel la validará y aplicará automáticamente.`,'ok');watchResponse(request.id);}catch(e){setStatus('No se pudo enviar: '+e.message,'bad');}finally{$('btnFinalizeTransfer').disabled=false;}
   }
   function statusLabel(st){const n=norm(st);if(n==='APPLIED')return['applied','APLICADA'];if(n==='REJECTED')return['rejected','RECHAZADA'];if(n==='PROCESSING')return['processing','PROCESANDO'];return['pending','PENDIENTE'];}
   async function resendRejectedTransfer(id,button){
@@ -1258,7 +1318,7 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
     document.querySelectorAll('[data-pdf-id]').forEach(b=>b.onclick=()=>{const r=loadHistory().find(x=>x.id===b.dataset.pdfId);if(r)downloadPdf(r);});
     document.querySelectorAll('[data-resend-id]').forEach(b=>b.onclick=()=>resendRejectedTransfer(b.dataset.resendId,b));
   }
-  function showTransferHistory(){if(!window.__mxViewerSalidaAuth?.username)window.mxRequireViewerSalidaAccess?.();if(!window.__mxViewerSalidaAuth?.username)return;$('transferView').classList.add('mx-hidden');$('pharmacyOrdersView').classList.add('mx-hidden');$('transferHistoryView').classList.remove('mx-hidden');$('tabTransfer').classList.remove('active');$('tabPharmacyOrders').classList.remove('active');$('tabTransferHistory').classList.add('active');renderHistory();}
+  function showTransferHistory(){if(!window.__mxViewerSalidaAuth?.username)window.mxRequireViewerSalidaAccess?.();if(!window.__mxViewerSalidaAuth?.username)return;setTransferCartOpen(false,{focusSearch:false});$('transferView').classList.add('mx-hidden');$('pharmacyOrdersView').classList.add('mx-hidden');$('transferHistoryView').classList.remove('mx-hidden');$('tabTransfer').classList.remove('active');$('tabPharmacyOrders').classList.remove('active');$('tabTransferHistory').classList.add('active');renderHistory();}
   function deleteTransferHistory(){const rows=loadHistory();if(!rows.length){alert('El historial ya está vacío.');return;}if(!window.confirm(`¿Eliminar todo el historial de transferencias de este dispositivo?\n\nRegistros: ${rows.length}\n\nEsta acción no elimina los movimientos guardados en Macroxel Hospitales.`))return;try{localStorage.removeItem(HISTORY_KEY);}catch(_e){}renderHistory();alert('Historial local eliminado correctamente.');}
 
   function reflectApplied(response){
@@ -1303,15 +1363,16 @@ function applyFilters(){filtered=selectedKey?raw.filter(x=>String(x.patientKey||
   }
   window.mxViewerAddPharmacyOrderToCart=addPharmacyOrderToCart;
   window.mxViewerShowTransfer=()=>{document.getElementById('pharmacyOrdersView')?.classList.add('mx-hidden');document.getElementById('tabPharmacyOrders')?.classList.remove('active');showTransfer();};
-  function showTransfer(){updateFloatingCartButton();$('patientsView').classList.add('mx-hidden');$('inventoryView').classList.add('mx-hidden');$('pharmacyOrdersView')?.classList.add('mx-hidden');$('transferHistoryView')?.classList.add('mx-hidden');$('transferView').classList.remove('mx-hidden');$('tabPatients').classList.remove('active');$('tabInventory').classList.remove('active');$('tabPharmacyOrders')?.classList.remove('active');$('tabTransferHistory')?.classList.remove('active');$('tabTransfer').classList.add('active');updateFloatingCartButton();loadLots(false).catch(e=>{$('transferInventoryStatus').textContent='No se pudo consultar: '+e.message;$('transferResults').innerHTML='<div class="empty">Verifica que Macroxel esté abierto y haya sincronizado el CPM.</div>';});}
+  function showTransfer(){setTransferCartOpen(false,{focusSearch:false});updateFloatingCartButton();$('patientsView').classList.add('mx-hidden');$('inventoryView').classList.add('mx-hidden');$('pharmacyOrdersView')?.classList.add('mx-hidden');$('transferHistoryView')?.classList.add('mx-hidden');$('transferView').classList.remove('mx-hidden');$('tabPatients').classList.remove('active');$('tabInventory').classList.remove('active');$('tabPharmacyOrders')?.classList.remove('active');$('tabTransferHistory')?.classList.remove('active');$('tabTransfer').classList.add('active');updateFloatingCartButton();loadLots(false).catch(e=>{$('transferInventoryStatus').textContent='No se pudo consultar: '+e.message;$('transferResults').innerHTML='<div class="empty">Verifica que Macroxel esté abierto y haya sincronizado el CPM.</div>';});}
   function init(){
     const floatingCart=$('mxFloatingCartButton'),transferView=$('transferView');
-    if(floatingCart)floatingCart.onclick=goToTransferCart;
+    if(floatingCart)floatingCart.onclick=toggleTransferCart;
     if(transferView)new MutationObserver(updateFloatingCartButton).observe(
       transferView,{attributes:true,attributeFilter:['class']}
     );
+    window.addEventListener('resize',()=>{if(!transferCartIsMobile())setTransferCartOpen(false,{focusSearch:false});else updateFloatingCartButton();});
     lastDirection='';try{localStorage.removeItem(DIRECTION_KEY);}catch(_e){}if($('transferDirection')){$('transferDirection').value='';$('transferDirection').addEventListener('change',e=>{const next=e.currentTarget.value==='E2A'?'E2A':e.currentTarget.value==='A2E'?'A2E':'';if(cart.length&&!confirm('Cambiar el sentido vaciará el carrito actual. ¿Continuar?')){e.currentTarget.value=lastDirection;return;}cart=[];lastDirection=next;updateDirectionUi();if(next)setStatus('Sentido seleccionado. Busca los productos para el origen elegido.','ok');else setStatus('Selecciona el sentido de la transferencia.','bad');});}updateDirectionUi();
-    const oldPatients=$('tabPatients').onclick,oldInventory=$('tabInventory').onclick;$('tabPatients').onclick=()=>{$('transferView').classList.add('mx-hidden');$('tabTransfer').classList.remove('active');oldPatients&&oldPatients();};$('tabInventory').onclick=()=>{$('transferView').classList.add('mx-hidden');$('tabTransfer').classList.remove('active');oldInventory&&oldInventory();};$('tabTransfer').onclick=showTransfer;$('transferRequester').value=localStorage.getItem(REQUESTER_KEY)||'';$('transferQ').addEventListener('input',()=>{transferSearchSelectArmed=false;clearTimeout(searchTimer);searchTimer=setTimeout(renderResults,80);});$('transferQ').addEventListener('focus',()=>{if(transferSearchSelectArmed){transferSelectSearchNow();requestAnimationFrame(transferSelectSearchNow);}});$('transferQ').addEventListener('click',()=>{if(transferSearchSelectArmed)transferSelectSearchNow();});$('transferQ').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('.transfer-result')?.click();}});$('transferKeyboardToggle').onclick=()=>transferApplyKeyboardMode(transferSearchKeyboardMode==='numeric'?'text':'numeric',true);transferApplyKeyboardMode('numeric',false);$('btnClearTransferCart').onclick=()=>{cart=[];renderCart();setStatus('Carrito limpio.');};$('btnFinalizeTransfer').onclick=finalize;$('tabTransferHistory').onclick=showTransferHistory;$('btnDeleteTransferHistory').onclick=deleteTransferHistory;$('transferQtyCancel').onclick=closeQty;$('transferQtyAccept').onclick=addSelected;$('transferQtyInput').addEventListener('input',updateQtyTransferSummary);$('transferQtyInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addSelected();}if(e.key==='Escape')closeQty();});$('transferQtyModal').addEventListener('click',e=>{if(e.target===$('transferQtyModal'))closeQty();});
+    const oldPatients=$('tabPatients').onclick,oldInventory=$('tabInventory').onclick;$('tabPatients').onclick=()=>{setTransferCartOpen(false,{focusSearch:false});$('transferView').classList.add('mx-hidden');$('tabTransfer').classList.remove('active');oldPatients&&oldPatients();};$('tabInventory').onclick=()=>{setTransferCartOpen(false,{focusSearch:false});$('transferView').classList.add('mx-hidden');$('tabTransfer').classList.remove('active');oldInventory&&oldInventory();};$('tabTransfer').onclick=showTransfer;$('transferRequester').value=localStorage.getItem(REQUESTER_KEY)||'';$('transferQ').addEventListener('input',()=>{transferSearchSelectArmed=false;clearTimeout(searchTimer);searchTimer=setTimeout(renderResults,80);});$('transferQ').addEventListener('focus',()=>{if(transferSearchSelectArmed){transferSelectSearchNow();requestAnimationFrame(transferSelectSearchNow);}});$('transferQ').addEventListener('click',()=>{if(transferSearchSelectArmed)transferSelectSearchNow();});$('transferQ').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();document.querySelector('.transfer-result')?.click();}});$('transferKeyboardToggle').onclick=()=>transferApplyKeyboardMode(transferSearchKeyboardMode==='numeric'?'text':'numeric',true);transferApplyKeyboardMode('numeric',false);$('btnClearTransferCart').onclick=()=>{if(!cart.length){setStatus('El carrito ya está vacío.');return;}const productsCount=cart.length,pieces=cart.reduce((sum,row)=>sum+num(row.pzs),0);const ok=window.confirm(`¿Limpiar el carrito?\n\nSe eliminarán ${productsCount} producto${productsCount===1?'':'s'} y ${pieces} pieza${pieces===1?'':'s'}.\n\nEsta acción no se puede deshacer.`);if(!ok){setStatus('Se conservó el contenido del carrito.');return;}cart=[];renderCart();setStatus('Carrito limpio.','ok');};$('btnFinalizeTransfer').onclick=finalize;$('tabTransferHistory').onclick=showTransferHistory;$('btnDeleteTransferHistory').onclick=deleteTransferHistory;$('transferQtyCancel').onclick=closeQty;$('transferQtyAccept').onclick=addSelected;$('transferQtyInput').addEventListener('focus',()=>{if(transferQtySelectArmed){transferSelectQtyNow();requestAnimationFrame(transferSelectQtyNow);}});$('transferQtyInput').addEventListener('click',()=>{if(transferQtySelectArmed)transferSelectQtyNow();});$('transferQtyInput').addEventListener('input',e=>{transferQtySelectArmed=false;const clean=String(e.target.value||'').replace(/\D+/g,'');if(e.target.value!==clean)e.target.value=clean;updateQtyTransferSummary();});$('transferQtyInput').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();addSelected();}if(e.key==='Escape')closeQty();});$('transferQtyModal').addEventListener('click',e=>{if(e.target===$('transferQtyModal'))closeQty();});
     $('transferLotsClose').onclick=()=>$('transferLotsModal').classList.remove('show');
     $('transferLotsModal').addEventListener('click',e=>{if(e.target===$('transferLotsModal'))$('transferLotsModal').classList.remove('show');});window.addEventListener('mx-viewer-config-changed',()=>{loaded=false;products=[];cart=[];renderCart();renderHistory();});window.addEventListener('mx-viewer-licensed',()=>{if(!$('transferView').classList.contains('mx-hidden')){loaded=false;loadLots(true).catch(e=>{$('transferInventoryStatus').textContent=e.message;});}});window.addEventListener('mx-viewer-refresh-now',()=>{if(!$('transferView').classList.contains('mx-hidden')){loaded=false;loadLots(true).catch(e=>{$('transferInventoryStatus').textContent=e.message;});}});renderCart();renderHistory();pollResponses();setInterval(pollResponses,15000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
