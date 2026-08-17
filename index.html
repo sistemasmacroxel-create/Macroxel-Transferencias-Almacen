@@ -3,17 +3,7 @@
 <html lang="es">
 <head>
 <meta name="robots" content="noindex,nofollow,noarchive,nosnippet">
-<style id="mx-single-ui-boot-v100">
-html.mx-ui-boot body{margin:0!important;background:#eef6fb!important;overflow:hidden!important}
-html.mx-ui-boot body>*:not(#mxUiBootV100){visibility:hidden!important;pointer-events:none!important}
-#mxUiBootV100{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#eaf5fb,#f8fbfe);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-#mxUiBootV100 .mx-b{display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid #d7e5f0;border-radius:16px;background:#fff;box-shadow:0 14px 45px rgba(15,52,82,.15);color:#0f3558;font-weight:900;font-size:14px}
-#mxUiBootV100 .mx-s{width:12px;height:12px;border-radius:50%;background:#2563eb;box-shadow:0 0 0 5px rgba(37,99,235,.14);animation:mxbootpulse 1s ease-in-out infinite alternate}
-@keyframes mxbootpulse{to{transform:scale(.72);opacity:.55}}
-</style>
-<script id="mx-single-ui-boot-head-v100">document.documentElement.classList.add('mx-ui-boot');</script>
-
-  <!-- Iconos unificados MACROXEL v1.0.00 · navegador + iOS + Android/PWA -->
+<!-- Iconos unificados MACROXEL v1.0.00 · navegador + iOS + Android/PWA -->
 
 
 
@@ -661,10 +651,59 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 }
 
 </style>
+
+<!-- MACROXEL v1.0.00 · estilos finales precargados; sin interfaz heredada -->
+<style id="mx-transferencias-sin-login-v100">#mxViewerSalidaAuth,#mxViewerSessionUser,#btnViewerLogout{display:none!important}</style>
+<style id="mx-connection-diagnostic-style-v104">
+#mxConnectionDiagnostic{position:fixed;right:8px;bottom:4px;z-index:9997;max-width:72vw;padding:3px 7px;border-radius:8px;background:rgba(255,255,255,.86);border:1px solid rgba(148,163,184,.45);box-shadow:0 2px 8px rgba(15,23,42,.08);font:600 9px/1.2 'Segoe UI',Arial,sans-serif;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;backdrop-filter:blur(3px)}
+@media(max-width:640px){#mxConnectionDiagnostic{font-size:8px;right:4px;bottom:3px;max-width:88vw}}
+</style>
+<style id="mx-ecosystem-live-id-v1010-style">
+#mxConnectionDiagnostic{display:none!important}
+#mxEcosystemLiveId{position:fixed;left:10px;right:auto;bottom:max(8px,env(safe-area-inset-bottom));z-index:9990;max-width:min(92vw,820px);padding:5px 9px;border:1px solid #cbd5e1;border-radius:10px;background:rgba(255,255,255,.96);box-shadow:0 4px 14px rgba(15,23,42,.12);font:700 9px/1.25 system-ui;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mxEcosystemLiveId b{color:#0f4c81}
+.mx-connection-gate-info{margin:9px 0 2px;padding:8px 10px;border:1px solid #bfdbfe;border-radius:11px;background:#eff6ff;color:#1e3a5f;font:700 10px/1.35 system-ui;word-break:break-all}
+.mx-connection-gate-info b{color:#0b4f7d}
+@media(max-width:600px){#mxEcosystemLiveId{left:8px;right:8px;max-width:none;font-size:8px}.mx-connection-gate-info{font-size:9px;padding:7px 8px}}
+</style>
+<style id="mx-logo-connection-info-v100-style">
+#mxEcosystemLiveId,#liveId.footer-id,.footer-id,#mxConnectionDiagnostic{display:none!important}
+.mx-logo-info-trigger{cursor:pointer!important;touch-action:manipulation;outline:none}
+.mx-logo-info-trigger:focus-visible{box-shadow:0 0 0 3px rgba(37,99,235,.35)!important;border-radius:10px}
+#mxLogoInfoOverlay{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(8,22,43,.72);backdrop-filter:blur(5px);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+#mxLogoInfoOverlay.mx-show{display:flex}
+#mxLogoInfoCard{width:min(620px,100%);max-height:min(88vh,760px);overflow:auto;background:#fff;border:1px solid #d8e3f0;border-radius:20px;box-shadow:0 28px 70px rgba(2,18,40,.34);color:#102a43}
+.mx-li-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:linear-gradient(135deg,#08365f,#0f6fa4);color:#fff;border-radius:19px 19px 0 0}
+.mx-li-head h2{margin:0;font-size:18px;line-height:1.2}.mx-li-head small{display:block;margin-top:3px;font-size:11px;opacity:.85}.mx-li-close{width:36px;height:36px;border:0;border-radius:11px;background:rgba(255,255,255,.17);color:#fff;font-size:22px;font-weight:900;cursor:pointer}
+.mx-li-body{padding:16px 18px 19px}.mx-li-section{margin:0 0 14px}.mx-li-section:last-child{margin-bottom:0}.mx-li-title{margin:0 0 8px;font-size:11px;font-weight:950;letter-spacing:.05em;text-transform:uppercase;color:#4b6b88}
+.mx-li-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.mx-li-row{min-width:0;padding:10px 11px;border:1px solid #dbe7f2;border-radius:12px;background:#f8fbfe}.mx-li-row.mx-wide{grid-column:1/-1}.mx-li-row span{display:block;margin-bottom:3px;font-size:9px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#647b91}.mx-li-row b{display:block;font-size:12px;line-height:1.35;color:#102f4c;overflow-wrap:anywhere;word-break:break-word}.mx-li-state{display:inline-flex!important;width:auto!important;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#dcfce7;color:#166534!important}.mx-li-state.mx-off{background:#fee2e2;color:#991b1b!important}.mx-li-designer{margin-top:11px;padding:10px 12px;border-radius:11px;background:#f8fafc;border:1px solid #dbe5f1;color:#123e72;text-align:center;font-size:11px;line-height:1.35}.mx-li-foot{margin-top:11px;padding:8px 10px;border-radius:10px;background:#eff6ff;color:#315776;font-size:10px;line-height:1.4}
+@media(max-width:540px){#mxLogoInfoOverlay{padding:9px;align-items:flex-end}#mxLogoInfoCard{max-height:90vh;border-radius:18px 18px 10px 10px}.mx-li-head{padding:13px 14px;border-radius:17px 17px 0 0}.mx-li-head h2{font-size:16px}.mx-li-body{padding:13px 14px 16px}.mx-li-grid{grid-template-columns:1fr}.mx-li-row.mx-wide{grid-column:auto}.mx-li-row{padding:9px 10px}.mx-li-row b{font-size:11px}}
+</style>
+<style id="mx-visor-header-login-v1025">
+#firebaseStatus,#pillUpdated,#mxViewerSessionUser,#btnViewerLogout,.mx-viewer-license-badge{display:none!important}
+#mxLogoInfoOverlay{display:none!important;visibility:hidden!important}
+#mxCompactStatusV1025{flex:0 0 auto;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;padding:0!important;margin:0!important;border-radius:999px!important;border:1px solid rgba(255,255,255,.30)!important;background:rgba(255,255,255,.12)!important;box-shadow:none!important;cursor:default!important;touch-action:manipulation!important}
+#mxCompactStatusV1025 .mx-cdot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.18);transition:.15s}
+#mxCompactStatusV1025.mx-ok .mx-cdot{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)}#mxCompactStatusV1025.mx-bad .mx-cdot{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.18)}
+#mxActivationLoginV1025{position:fixed;inset:0;z-index:2147483600;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(5,22,42,.76);backdrop-filter:blur(5px);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}#mxActivationLoginV1025.mx-show{display:flex}
+#mxActivationLoginV1025 .mx-login-card{width:min(590px,100%);max-height:88vh;overflow:auto;background:#fff;border:1px solid #d7e3ef;border-radius:19px;box-shadow:0 30px 80px rgba(0,0,0,.34);color:#102a43}#mxActivationLoginV1025 .mx-login-head{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:15px 17px;background:linear-gradient(135deg,#08365f,#0f6fa4);color:#fff;border-radius:18px 18px 0 0}#mxActivationLoginV1025 .mx-login-head h2{margin:0;font-size:17px;line-height:1.2}#mxActivationLoginV1025 .mx-login-head small{display:block;margin-top:3px;font-size:10px;opacity:.85}#mxActivationLoginV1025 .mx-login-x{width:36px;height:36px;min-width:36px;padding:0;border:0;border-radius:10px;background:rgba(255,255,255,.17);color:#fff;font-size:25px;font-weight:900;line-height:1;cursor:pointer}
+#mxActivationLoginV1025 .mx-login-body{padding:15px 17px 17px}#mxActivationLoginV1025 .mx-login-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#mxActivationLoginV1025 .mx-login-row{min-width:0;border:1px solid #dbe7f2;border-radius:11px;background:#f8fbfe;padding:9px 10px}#mxActivationLoginV1025 .mx-login-row.mx-wide{grid-column:1/-1}#mxActivationLoginV1025 .mx-login-row span{display:block;margin-bottom:3px;color:#647b91;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}#mxActivationLoginV1025 .mx-login-row b{display:block;color:#123e62;font-size:12px;line-height:1.35;overflow-wrap:anywhere}#mxActivationLoginV1025 .mx-login-state.mx-ok{color:#166534}#mxActivationLoginV1025 .mx-login-state.mx-bad{color:#991b1b}#mxActivationLoginV1025 .mx-login-designer{margin-top:11px;padding:10px;border:1px solid #dbe5f1;border-radius:11px;background:#f8fafc;color:#123e72;text-align:center;font-size:11px;font-weight:900;line-height:1.4}#mxActivationLoginV1025 .mx-login-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}#mxActivationLoginV1025 .mx-login-actions button{border:0;border-radius:10px;padding:8px 11px;background:#e2e8f0;color:#334155;font-size:10px;font-weight:900;cursor:pointer}
+@media(max-width:560px){#mxCompactStatusV1025{width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important}#mxActivationLoginV1025{align-items:flex-end;padding:8px}#mxActivationLoginV1025 .mx-login-card{max-height:91vh;border-radius:17px 17px 9px 9px}#mxActivationLoginV1025 .mx-login-grid{grid-template-columns:1fr}#mxActivationLoginV1025 .mx-login-row.mx-wide{grid-column:auto}}
+</style>
+<style id="mx-transfer-stable-navigation-v100-style">
+/* MACROXEL v1.0.00 · Transferencias: navegación estable, sin redibujos globales. */
+#mxTransferStableBusy{display:none!important}
+</style>
+<style id="mx-activation-clean-v100">
+/* Activación compacta: solo datos personales visibles; el ID técnico se conserva internamente. */
+#mxIdentityHint{display:none!important}
+.mx-va-idline,.mx-va-device,#mxVaDevice,#mxVaCopy,#deviceIdBox,#deviceBox,#activationDevice,#viewerDevice{display:none!important}
+#mxViewerActivationGate .mx-va-card,#activationGate .gate-card,#mxVaGate .mx-va-card{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
+#mxViewerActivationGate .mx-va-actions,#activationGate .gate-actions,#mxVaGate .mx-va-actions{position:sticky;bottom:0;z-index:8;background:#fff;padding-top:10px;padding-bottom:2px;border-top:1px solid rgba(203,213,225,.65)}
+#mxVaSubmit,#actSubmit,#sendActivation,#activationSubmit,#btnActivationSubmit{display:inline-flex!important;align-items:center;justify-content:center;visibility:visible!important;opacity:1!important}
+</style>
 </head>
 <body>
-<div id="mxUiBootV100" aria-live="polite"><div class="mx-b"><span class="mx-s"></span><span>MACROXEL · cargando interfaz segura…</span></div></div>
-
 <div class="wrap">
 <div class="top">
 <div class="brand">
@@ -1674,7 +1713,7 @@ window.mxOpenTransferAdjustment=async function(id){try{if(!window.__mxViewerSali
 })();
 </script>
 
-<style id="mx-transferencias-sin-login-v100">#mxViewerSalidaAuth,#mxViewerSessionUser,#btnViewerLogout{display:none!important}</style>
+
 <script id="mx-transferencias-identidad-activacion-v100">
 (function(){'use strict';if(window.__mxTransferIdentityV100)return;window.__mxTransferIdentityV100=true;
 const txt=v=>String(v==null?'':v).trim();
@@ -1797,10 +1836,7 @@ function boot(){apply(cached()||{});setTimeout(()=>apply(cached()||{}),500)}if(d
 })();
 </script>
 
-<style id="mx-connection-diagnostic-style-v104">
-#mxConnectionDiagnostic{position:fixed;right:8px;bottom:4px;z-index:9997;max-width:72vw;padding:3px 7px;border-radius:8px;background:rgba(255,255,255,.86);border:1px solid rgba(148,163,184,.45);box-shadow:0 2px 8px rgba(15,23,42,.08);font:600 9px/1.2 'Segoe UI',Arial,sans-serif;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;backdrop-filter:blur(3px)}
-@media(max-width:640px){#mxConnectionDiagnostic{font-size:8px;right:4px;bottom:3px;max-width:88vw}}
-</style>
+
 
 <script id="mx-connection-diagnostic-v104">
 (function(){
@@ -1829,55 +1865,42 @@ function boot(){apply(cached()||{});setTimeout(()=>apply(cached()||{}),500)}if(d
 })();
 </script>
 
-<style id="mx-ecosystem-live-id-v1010-style">
-#mxConnectionDiagnostic{display:none!important}
-#mxEcosystemLiveId{position:fixed;left:10px;right:auto;bottom:max(8px,env(safe-area-inset-bottom));z-index:9990;max-width:min(92vw,820px);padding:5px 9px;border:1px solid #cbd5e1;border-radius:10px;background:rgba(255,255,255,.96);box-shadow:0 4px 14px rgba(15,23,42,.12);font:700 9px/1.25 system-ui;color:#334155;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#mxEcosystemLiveId b{color:#0f4c81}
-.mx-connection-gate-info{margin:9px 0 2px;padding:8px 10px;border:1px solid #bfdbfe;border-radius:11px;background:#eff6ff;color:#1e3a5f;font:700 10px/1.35 system-ui;word-break:break-all}
-.mx-connection-gate-info b{color:#0b4f7d}
-@media(max-width:600px){#mxEcosystemLiveId{left:8px;right:8px;max-width:none;font-size:8px}.mx-connection-gate-info{font-size:9px;padding:7px 8px}}
-</style>
 
-<style id="mx-fixed-principal-binding-v100-style">
-#mxPrincipalBindingGate{position:fixed;inset:0;z-index:1900;background:rgba(5,24,42,.82);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px}
-#mxPrincipalBindingGate .mx-pb-card{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:20px;box-shadow:0 30px 90px rgba(0,0,0,.45);padding:18px}
-#mxPrincipalBindingGate h2{margin:0;color:#103f66;font-size:21px}#mxPrincipalBindingGate p{color:#64748b;font-size:12px;line-height:1.45}
-#mxPrincipalBindingGate .mx-pb-list{display:grid;gap:9px;margin-top:12px}.mx-pb-system{border:1px solid #cfe0ee;border-radius:14px;padding:12px;background:#f8fbfe;cursor:pointer;text-align:left;color:#17324b}
-.mx-pb-system:hover{border-color:#4f7ee8;box-shadow:0 7px 20px rgba(37,99,235,.12)}.mx-pb-system b{display:block;color:#103f66;font-size:14px}.mx-pb-system small{display:block;margin-top:4px;color:#64748b;overflow-wrap:anywhere}
-.mx-pb-current{display:inline-block;margin-top:7px;padding:4px 8px;border-radius:999px;background:#e0f2fe;color:#075985;font-size:10px;font-weight:900}
-</style>
 <script id="mx-fixed-principal-binding-v100">
 (function(){
-'use strict';if(window.__mxFixedPrincipalBindingStrictV2)return;window.__mxFixedPrincipalBindingStrictV2=true;
-const CONTROL_DB='https://ecosistema-macroxel-default-rtdb.firebaseio.com',APP='TRANSFERENCIAS',KEY='mx_principal_binding_v2_transferencias',ONLINE_MS=95000;
+'use strict';
+/* MACROXEL v1.0.00 · vinculación estable v3
+   - Nunca recorre otros Sistemas Principales.
+   - Migra SOLO el ID de asociaciones previas; nunca adopta su URL antigua como autoridad.
+   - La URL vigente siempre se resuelve por /ecosystem_connection/<ID exacto>.
+   - No emite mx-viewer-config-changed durante comprobaciones periódicas: evita cerrar módulos/mostrar activación.
+*/
+if(window.__mxFixedPrincipalBindingStableV3)return;window.__mxFixedPrincipalBindingStableV3=true;
+const CONTROL_DB='https://ecosistema-macroxel-default-rtdb.firebaseio.com',APP='TRANSFERENCIAS',KEY='mx_principal_binding_v2_transferencias',LEGACY_KEY='mx_principal_binding_v1',ONLINE_MS=95000;
 const txt=v=>String(v==null?'':v).trim(),cleanDb=v=>txt(v).replace(/\.json\/?$/i,'').replace(/\/+$/,''),cleanId=v=>txt(v).toUpperCase().replace(/[.#$\[\]\/]/g,'_');
+const validId=v=>{const id=cleanId(v);return /^MACROXEL-[A-Z0-9_-]{4,}$/.test(id)?id:''};
 function rest(db,path){const b=cleanDb(db);if(!b)return'';const p=String(path||'').startsWith('/')?String(path):'/'+String(path||'');return b+p+(p.endsWith('.json')?'':'.json')}
 async function get(db,path,timeout=6500){const u=rest(db,path);if(!u)return null;const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);try{const r=await fetch(u+'?mx='+Date.now(),{cache:'no-store',signal:c.signal});if(!r.ok)return null;return await r.json().catch(()=>null)}catch(_e){return null}finally{clearTimeout(t)}}
-function exactRecord(rec,want=''){if(!rec||typeof rec!=='object')return null;const id=cleanId(rec.unitId||rec.activationId||rec.storeId||rec.branch),db=cleanDb(rec.firebaseUrl||rec.currentUrl||rec.db||rec.url);if(!id||!db||(want&&id!==cleanId(want)))return null;return{systemId:id,branch:id,db,firebaseUrl:db,unitName:txt(rec.unitName||rec.unidad||rec.principalName||rec.seatLabel||''),updatedAt:txt(rec.updatedAt||rec.publishedAt||'')}}
-function readBinding(){try{const b=JSON.parse(localStorage.getItem(KEY)||'null');const id=cleanId(b?.systemId||b?.branch);return id?{...b,systemId:id,branch:id,db:cleanDb(b.db||b.firebaseUrl)}:null}catch(_e){return null}}
-function queryId(){try{const u=new URL(location.href),id=cleanId(u.searchParams.get('mxSystem')||u.searchParams.get('mxPrincipal')||u.searchParams.get('mxSystemId'));if(id){u.searchParams.delete('mxSystem');u.searchParams.delete('mxPrincipal');u.searchParams.delete('mxSystemId');history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash)}return id}catch(_e){return''}}
-function migrationId(){const q=queryId();if(q)return q;const b=readBinding();return b?.systemId||''}
-
-function sanitizeOwnConfig(id=''){try{const r=JSON.parse(localStorage.getItem('mx_viewer_transferencias_cfg_v104')||'null')||{};const next={...r,db:'',firebaseUrl:'',currentUrl:'',url:'',branch:id||cleanId(r.branch||r.unitId||'')};localStorage.setItem('mx_viewer_transferencias_cfg_v104',JSON.stringify(next));}catch(_e){}}
-
-let systemId=migrationId();sanitizeOwnConfig(systemId);try{window.mxViewerSaveCfg?.({db:'',branch:systemId||''},false)}catch(_e){}
-function persist(rec,source='REGISTRO_EXACTO'){const r=exactRecord(rec,systemId);if(!r)return null;systemId=r.systemId;const next={schemaVersion:2,mode:'STRICT_FIXED_SYSTEM_ID',appCode:APP,systemId:r.systemId,branch:r.systemId,db:r.db,firebaseUrl:r.db,unitName:r.unitName,boundAt:readBinding()?.boundAt||new Date().toISOString(),updatedAt:new Date().toISOString(),source};try{localStorage.setItem(KEY,JSON.stringify(next))}catch(_e){}try{window.mxViewerSaveCfg?.({db:r.db,branch:r.systemId,unitName:r.unitName},false)}catch(_e){}try{window.dispatchEvent(new CustomEvent('mx-viewer-config-changed',{detail:{strictBinding:true,systemId:r.systemId,source}}))}catch(_e){}return next}
-async function resolve(force=false){if(!systemId)return null;const rec=exactRecord(await get(CONTROL_DB,'/ecosystem_connection/'+encodeURIComponent(systemId)),systemId);if(!rec){try{window.mxViewerSaveCfg?.({db:'',branch:systemId},false)}catch(_e){}return null}return persist(rec,force?'ACTUALIZACION_EXACTA':'REGISTRO_EXACTO')}
-async function resolveForActivation(){const b=await resolve(true);return b?{branch:b.systemId,db:b.db,unitName:b.unitName}:{branch:systemId,db:'',unitName:''}}
-async function connectionState(){const b=await resolve(false);if(!b||!b.db||navigator.onLine===false)return{connected:false,principalOnline:false,firebase:false,systemId:systemId||'',reason:'Sistema Principal asociado sin conexión'};const [probe,pres]=await Promise.all([get(b.db,'/ecosystem_connection/'+encodeURIComponent(b.systemId),5000),get(CONTROL_DB,'/inventory_heartbeat/principal_presence/'+encodeURIComponent(b.systemId),5000)]);const firebase=!!exactRecord(probe,b.systemId),last=Number(pres?.lastSeenMs)||Date.parse(pres?.lastSeenAt||0)||0,paused=pres?.connectionPaused===true||pres?.remoteDisconnected===true,online=!!last&&Date.now()-last<ONLINE_MS&&!paused;return{connected:firebase&&online,principalOnline:online,firebase,paused,systemId:b.systemId,lastSeenAt:pres?.lastSeenAt||'',reason:firebase&&online?'Conectado':paused?'Sistema Principal desconectado':'Sin señal del Sistema Principal asociado'}}
-function gate(){
- if(systemId)return;
- const show=()=>{
-  if(document.getElementById('mxStrictBindingGate'))return;
-  const el=document.createElement('div');el.id='mxStrictBindingGate';
-  el.innerHTML='<div class="mx-pb-card"><h2>Vincular a Sistema Principal</h2><p>Este visor no buscará otras instalaciones. Escribe el <b>ID de activación</b> que aparece en Configuración del Sistema Principal. Se guardará solo para este visor.</p><input id="mxStrictSystemId" autocomplete="off" placeholder="MACROXEL-HPS-..." style="width:100%;margin:10px 0;padding:11px;border:1px solid #cbd5e1;border-radius:10px"><button id="mxStrictBindBtn" type="button" style="width:100%;padding:11px;border:0;border-radius:10px;background:#1d4ed8;color:white;font-weight:800">Vincular este visor</button><div id="mxStrictBindMsg" style="margin-top:8px;font-size:12px"></div></div>';
-  document.body.appendChild(el);
-  el.querySelector('#mxStrictBindBtn').onclick=async()=>{const id=cleanId(el.querySelector('#mxStrictSystemId').value),msg=el.querySelector('#mxStrictBindMsg');if(!id){msg.textContent='Captura el ID del Sistema Principal.';return}msg.textContent='Verificando asociación…';systemId=id;sanitizeOwnConfig(id);try{window.mxViewerSaveCfg?.({db:'',branch:id},false)}catch(_e){}const b=await resolve(true);if(!b){systemId='';msg.textContent='No se encontró ese Sistema Principal en el Centro de control. Verifica el ID y que el sistema esté encendido.';return}msg.textContent='Vinculado correctamente.';setTimeout(()=>location.reload(),250)};
- };
- document.readyState==='loading'?document.addEventListener('DOMContentLoaded',show,{once:true}):show();
-}
-window.mxFixedPrincipalBinding={version:'2.0.0',mode:'STRICT_FIXED_SYSTEM_ID',appCode:APP,get systemId(){return systemId},read:readBinding,resolve,resolveForActivation,connectionState};
-gate();if(systemId)setTimeout(()=>resolve(true),20);window.addEventListener('online',()=>systemId&&setTimeout(()=>resolve(true),150));
+function exactRecord(rec,want=''){if(!rec||typeof rec!=='object')return null;const id=validId(rec.unitId||rec.activationId||rec.storeId||rec.branch),db=cleanDb(rec.firebaseUrl||rec.currentUrl||rec.db||rec.url);if(!id||!db||(want&&id!==validId(want)))return null;return{systemId:id,branch:id,db,firebaseUrl:db,unitName:txt(rec.unitName||rec.unidad||rec.principalName||rec.seatLabel||''),updatedAt:txt(rec.updatedAt||rec.publishedAt||'')}}
+function parseKey(k){try{const b=JSON.parse(localStorage.getItem(k)||'null');if(!b||typeof b!=='object')return null;const id=validId(b.systemId||b.branch||b.unitId);return id?{...b,systemId:id,branch:id,db:cleanDb(b.db||b.firebaseUrl)}:null}catch(_e){return null}}
+function queryId(){try{const u=new URL(location.href),id=validId(u.searchParams.get('mxSystem')||u.searchParams.get('mxPrincipal')||u.searchParams.get('mxSystemId'));if(id){u.searchParams.delete('mxSystem');u.searchParams.delete('mxPrincipal');u.searchParams.delete('mxSystemId');history.replaceState(null,'',u.pathname+(u.search?u.search:'')+u.hash)}return id}catch(_e){return''}}
+function ownBranchId(){try{const c=window.mxViewerGetCfg?.()||{};return validId(c.branch||c.unitId)}catch(_e){return''}}
+function ownStoredId(){try{const r=JSON.parse(localStorage.getItem('mx_viewer_transferencias_cfg_v104')||'null')||{};return validId(r.branch||r.unitId)}catch(_e){return''}}
+function candidate(){const q=queryId();if(q)return{id:q,source:'URL_SISTEMA_PRINCIPAL'};const cur=parseKey(KEY);if(cur?.systemId)return{id:cur.systemId,source:'VINCULO_ACTUAL',cached:cur};const legacy=parseKey(LEGACY_KEY);if(legacy?.systemId)return{id:legacy.systemId,source:'MIGRACION_ID_V1'};const own=ownBranchId()||ownStoredId();if(own)return{id:own,source:'RAMA_LOCAL'};return{id:'',source:'SIN_VINCULO'}}
+function syncOwnLocal(id,db,unitName=''){try{const k='mx_viewer_transferencias_cfg_v104',r=JSON.parse(localStorage.getItem(k)||'null')||{},branch=cleanId(id);if(!branch)return;const next={...r,branch};if(db)next.db=cleanDb(db);else if(cleanId(r.branch||r.unitId||'')!==branch)next.db='';if(unitName)next.unitName=txt(unitName);delete next.firebaseUrl;delete next.currentUrl;delete next.url;localStorage.setItem(k,JSON.stringify(next));}catch(_e){}}
+let first=candidate(),systemId=first.id,cached=(first.cached&&first.cached.systemId===systemId)?first.cached:null,lastAppliedCore='';
+if(systemId&&cached?.db)syncOwnLocal(systemId,cached.db,cached.unitName||'');
+else if(systemId)syncOwnLocal(systemId,'','');
+function readBinding(){const b=parseKey(KEY);return b&&b.systemId===systemId?b:null}
+function coreOf(x){return JSON.stringify([validId(x?.systemId||x?.branch),cleanDb(x?.db||x?.firebaseUrl),txt(x?.unitName)])}
+function applyViewer(rec){if(!rec||!rec.systemId||!rec.db)return;syncOwnLocal(rec.systemId,rec.db,rec.unitName);try{const c=window.mxViewerGetCfg?.()||{},same=validId(c.branch||c.unitId)===rec.systemId&&cleanDb(c.db||c.firebaseUrl)===rec.db&&txt(c.unitName||'')===txt(rec.unitName||'');if(!same)window.mxViewerSaveCfg?.({db:rec.db,branch:rec.systemId,unitName:rec.unitName},false)}catch(_e){}}
+function persist(rec,source='REGISTRO_EXACTO'){const r=exactRecord(rec,systemId);if(!r)return null;systemId=r.systemId;const prev=readBinding(),core=coreOf(r),changed=!prev||coreOf(prev)!==core;const next=changed?{schemaVersion:3,mode:'STRICT_FIXED_SYSTEM_ID',appCode:APP,systemId:r.systemId,branch:r.systemId,db:r.db,firebaseUrl:r.db,unitName:r.unitName,boundAt:prev?.boundAt||new Date().toISOString(),updatedAt:new Date().toISOString(),source}:prev;try{if(changed)localStorage.setItem(KEY,JSON.stringify(next));if(first.source==='MIGRACION_ID_V1'&&changed){/* conserva el legado sin usar su URL; la clave v2/v3 ya manda para este visor */}}catch(_e){}applyViewer(r);if(changed){lastAppliedCore=core;try{window.dispatchEvent(new CustomEvent('mx-viewer-binding-updated',{detail:{systemId:r.systemId,db:r.db,unitName:r.unitName,source}}))}catch(_e){}}return next}
+async function resolve(force=false){if(!systemId)return null;const rec=exactRecord(await get(CONTROL_DB,'/ecosystem_connection/'+encodeURIComponent(systemId)),systemId);if(!rec)return readBinding();return persist(rec,force?'ACTUALIZACION_EXACTA':'REGISTRO_EXACTO')}
+async function resolveForActivation(){const b=await resolve(true)||readBinding();return b?{branch:b.systemId,db:cleanDb(b.db||b.firebaseUrl),unitName:b.unitName||''}:{branch:systemId,db:'',unitName:''}}
+async function connectionState(){const b=await resolve(false)||readBinding();if(!b||!cleanDb(b.db||b.firebaseUrl)||navigator.onLine===false)return{connected:false,principalOnline:false,firebase:false,systemId:systemId||'',reason:systemId?'Sistema Principal asociado sin conexión':'Visor sin asociación al Sistema Principal'};const db=cleanDb(b.db||b.firebaseUrl),[probe,pres]=await Promise.all([get(db,'/ecosystem_connection/'+encodeURIComponent(systemId),5000),get(CONTROL_DB,'/inventory_heartbeat/principal_presence/'+encodeURIComponent(systemId),5000)]);const firebase=!!exactRecord(probe,systemId),last=Number(pres?.lastSeenMs)||Date.parse(pres?.lastSeenAt||0)||0,paused=pres?.connectionPaused===true||pres?.remoteDisconnected===true,online=!!last&&Date.now()-last<ONLINE_MS&&!paused;return{connected:firebase&&online,principalOnline:online,firebase,paused,systemId,lastSeenAt:pres?.lastSeenAt||'',reason:firebase&&online?'Conectado':paused?'Sistema Principal desconectado':'Sin señal del Sistema Principal asociado'}}
+function showUnboundMessage(){if(systemId)return;const run=()=>{for(const id of ['activationConnection','mxVaMessage','actMsg','activationMsg']){const e=document.getElementById(id);if(e&&!txt(e.textContent))e.textContent='Abre este visor desde el Sistema Principal una vez para asociarlo a esta instalación.'}};document.readyState==='loading'?document.addEventListener('DOMContentLoaded',run,{once:true}):run()}
+window.mxFixedPrincipalBinding={version:'3.0.0',mode:'STRICT_FIXED_SYSTEM_ID',appCode:APP,get systemId(){return systemId},read:readBinding,resolve,resolveForActivation,connectionState};
+showUnboundMessage();if(systemId){setTimeout(()=>resolve(true),0);setTimeout(()=>{const b=readBinding();if(b)applyViewer(b)},80)}window.addEventListener('online',()=>systemId&&setTimeout(()=>resolve(true),150));
 })();
 </script>
 
@@ -1894,19 +1917,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 
 
-<style id="mx-logo-connection-info-v100-style">
-#mxEcosystemLiveId,#liveId.footer-id,.footer-id,#mxConnectionDiagnostic{display:none!important}
-.mx-logo-info-trigger{cursor:pointer!important;touch-action:manipulation;outline:none}
-.mx-logo-info-trigger:focus-visible{box-shadow:0 0 0 3px rgba(37,99,235,.35)!important;border-radius:10px}
-#mxLogoInfoOverlay{position:fixed;inset:0;z-index:2147483000;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(8,22,43,.72);backdrop-filter:blur(5px);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
-#mxLogoInfoOverlay.mx-show{display:flex}
-#mxLogoInfoCard{width:min(620px,100%);max-height:min(88vh,760px);overflow:auto;background:#fff;border:1px solid #d8e3f0;border-radius:20px;box-shadow:0 28px 70px rgba(2,18,40,.34);color:#102a43}
-.mx-li-head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;background:linear-gradient(135deg,#08365f,#0f6fa4);color:#fff;border-radius:19px 19px 0 0}
-.mx-li-head h2{margin:0;font-size:18px;line-height:1.2}.mx-li-head small{display:block;margin-top:3px;font-size:11px;opacity:.85}.mx-li-close{width:36px;height:36px;border:0;border-radius:11px;background:rgba(255,255,255,.17);color:#fff;font-size:22px;font-weight:900;cursor:pointer}
-.mx-li-body{padding:16px 18px 19px}.mx-li-section{margin:0 0 14px}.mx-li-section:last-child{margin-bottom:0}.mx-li-title{margin:0 0 8px;font-size:11px;font-weight:950;letter-spacing:.05em;text-transform:uppercase;color:#4b6b88}
-.mx-li-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.mx-li-row{min-width:0;padding:10px 11px;border:1px solid #dbe7f2;border-radius:12px;background:#f8fbfe}.mx-li-row.mx-wide{grid-column:1/-1}.mx-li-row span{display:block;margin-bottom:3px;font-size:9px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;color:#647b91}.mx-li-row b{display:block;font-size:12px;line-height:1.35;color:#102f4c;overflow-wrap:anywhere;word-break:break-word}.mx-li-state{display:inline-flex!important;width:auto!important;align-items:center;gap:6px;padding:4px 8px;border-radius:999px;background:#dcfce7;color:#166534!important}.mx-li-state.mx-off{background:#fee2e2;color:#991b1b!important}.mx-li-designer{margin-top:11px;padding:10px 12px;border-radius:11px;background:#f8fafc;border:1px solid #dbe5f1;color:#123e72;text-align:center;font-size:11px;line-height:1.35}.mx-li-foot{margin-top:11px;padding:8px 10px;border-radius:10px;background:#eff6ff;color:#315776;font-size:10px;line-height:1.4}
-@media(max-width:540px){#mxLogoInfoOverlay{padding:9px;align-items:flex-end}#mxLogoInfoCard{max-height:90vh;border-radius:18px 18px 10px 10px}.mx-li-head{padding:13px 14px;border-radius:17px 17px 0 0}.mx-li-head h2{font-size:16px}.mx-li-body{padding:13px 14px 16px}.mx-li-grid{grid-template-columns:1fr}.mx-li-row.mx-wide{grid-column:auto}.mx-li-row{padding:9px 10px}.mx-li-row b{font-size:11px}}
-</style>
+
 <script id="mx-shared-activation-profile-v100">
 (function(){
   'use strict';
@@ -2197,17 +2208,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 })();
 </script>
 
-<style id="mx-visor-header-login-v1025">
-#firebaseStatus,#pillUpdated,#mxViewerSessionUser,#btnViewerLogout,.mx-viewer-license-badge{display:none!important}
-#mxLogoInfoOverlay{display:none!important;visibility:hidden!important}
-#mxCompactStatusV1025{flex:0 0 auto;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:34px!important;height:34px!important;min-width:34px!important;min-height:34px!important;padding:0!important;margin:0!important;border-radius:999px!important;border:1px solid rgba(255,255,255,.30)!important;background:rgba(255,255,255,.12)!important;box-shadow:none!important;cursor:default!important;touch-action:manipulation!important}
-#mxCompactStatusV1025 .mx-cdot{width:10px;height:10px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.18);transition:.15s}
-#mxCompactStatusV1025.mx-ok .mx-cdot{background:#22c55e;box-shadow:0 0 0 4px rgba(34,197,94,.18)}#mxCompactStatusV1025.mx-bad .mx-cdot{background:#ef4444;box-shadow:0 0 0 4px rgba(239,68,68,.18)}
-#mxActivationLoginV1025{position:fixed;inset:0;z-index:2147483600;display:none;align-items:center;justify-content:center;padding:14px;background:rgba(5,22,42,.76);backdrop-filter:blur(5px);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}#mxActivationLoginV1025.mx-show{display:flex}
-#mxActivationLoginV1025 .mx-login-card{width:min(590px,100%);max-height:88vh;overflow:auto;background:#fff;border:1px solid #d7e3ef;border-radius:19px;box-shadow:0 30px 80px rgba(0,0,0,.34);color:#102a43}#mxActivationLoginV1025 .mx-login-head{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:15px 17px;background:linear-gradient(135deg,#08365f,#0f6fa4);color:#fff;border-radius:18px 18px 0 0}#mxActivationLoginV1025 .mx-login-head h2{margin:0;font-size:17px;line-height:1.2}#mxActivationLoginV1025 .mx-login-head small{display:block;margin-top:3px;font-size:10px;opacity:.85}#mxActivationLoginV1025 .mx-login-x{width:36px;height:36px;min-width:36px;padding:0;border:0;border-radius:10px;background:rgba(255,255,255,.17);color:#fff;font-size:25px;font-weight:900;line-height:1;cursor:pointer}
-#mxActivationLoginV1025 .mx-login-body{padding:15px 17px 17px}#mxActivationLoginV1025 .mx-login-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}#mxActivationLoginV1025 .mx-login-row{min-width:0;border:1px solid #dbe7f2;border-radius:11px;background:#f8fbfe;padding:9px 10px}#mxActivationLoginV1025 .mx-login-row.mx-wide{grid-column:1/-1}#mxActivationLoginV1025 .mx-login-row span{display:block;margin-bottom:3px;color:#647b91;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.04em}#mxActivationLoginV1025 .mx-login-row b{display:block;color:#123e62;font-size:12px;line-height:1.35;overflow-wrap:anywhere}#mxActivationLoginV1025 .mx-login-state.mx-ok{color:#166534}#mxActivationLoginV1025 .mx-login-state.mx-bad{color:#991b1b}#mxActivationLoginV1025 .mx-login-designer{margin-top:11px;padding:10px;border:1px solid #dbe5f1;border-radius:11px;background:#f8fafc;color:#123e72;text-align:center;font-size:11px;font-weight:900;line-height:1.4}#mxActivationLoginV1025 .mx-login-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}#mxActivationLoginV1025 .mx-login-actions button{border:0;border-radius:10px;padding:8px 11px;background:#e2e8f0;color:#334155;font-size:10px;font-weight:900;cursor:pointer}
-@media(max-width:560px){#mxCompactStatusV1025{width:30px!important;height:30px!important;min-width:30px!important;min-height:30px!important}#mxActivationLoginV1025{align-items:flex-end;padding:8px}#mxActivationLoginV1025 .mx-login-card{max-height:91vh;border-radius:17px 17px 9px 9px}#mxActivationLoginV1025 .mx-login-grid{grid-template-columns:1fr}#mxActivationLoginV1025 .mx-login-row.mx-wide{grid-column:auto}}
-</style>
+
 <script id="mx-visor-header-login-runtime-v1025">
 (function(){
  'use strict';
@@ -2386,10 +2387,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 
 </script>
 
-<style id="mx-transfer-stable-navigation-v100-style">
-/* MACROXEL v1.0.00 · Transferencias: navegación estable, sin redibujos globales. */
-#mxTransferStableBusy{display:none!important}
-</style>
+
 <script id="mx-transfer-stable-navigation-v100">
 (function(){
 'use strict';
@@ -2470,14 +2468,7 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 
 
-<style id="mx-activation-clean-v100">
-/* Activación compacta: solo datos personales visibles; el ID técnico se conserva internamente. */
-#mxIdentityHint{display:none!important}
-.mx-va-idline,.mx-va-device,#mxVaDevice,#mxVaCopy,#deviceIdBox,#deviceBox,#activationDevice,#viewerDevice{display:none!important}
-#mxViewerActivationGate .mx-va-card,#activationGate .gate-card,#mxVaGate .mx-va-card{max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain}
-#mxViewerActivationGate .mx-va-actions,#activationGate .gate-actions,#mxVaGate .mx-va-actions{position:sticky;bottom:0;z-index:8;background:#fff;padding-top:10px;padding-bottom:2px;border-top:1px solid rgba(203,213,225,.65)}
-#mxVaSubmit,#actSubmit,#sendActivation,#activationSubmit,#btnActivationSubmit{display:inline-flex!important;align-items:center;justify-content:center;visibility:visible!important;opacity:1!important}
-</style>
+
 <script id="mx-activation-clean-v100-js">
 (function(){'use strict';
  function clean(){
@@ -2496,11 +2487,5 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
  new MutationObserver(clean).observe(document.documentElement,{subtree:true,childList:true});
 })();
 </script>
-
-
-<script id="mx-single-ui-boot-end-v100">
-(function(){'use strict';let done=false;function reveal(){if(done)return;done=true;const finish=()=>{document.documentElement.classList.remove('mx-ui-boot');const b=document.getElementById('mxUiBootV100');if(b)b.remove();};requestAnimationFrame(()=>requestAnimationFrame(()=>setTimeout(finish,60)));}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',reveal,{once:true});else reveal();setTimeout(reveal,2200);})();
-</script>
-
 </body>
 </html>
