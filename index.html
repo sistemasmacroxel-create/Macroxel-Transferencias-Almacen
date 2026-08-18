@@ -1888,25 +1888,31 @@ async function connectionState(){
  const b=await resolve(false);
  if(!b||!cleanDb(b.db||b.firebaseUrl))return{connected:false,principalOnline:false,firebase:false,systemId:systemId||'',reason:systemId?'Esperando la Firebase activa del Sistema Principal asociado':'Visor sin asociación al Sistema Principal'};
  if(navigator.onLine===false)return{connected:false,principalOnline:false,firebase:false,systemId:systemId||'',reason:'Dispositivo sin conexión a Internet'};
- const now=Date.now(),db=cleanDb(b.db||b.firebaseUrl);
- if(lastStateDb!==db||lastStateSystem!==systemId){lastStateDb=db;lastStateSystem=systemId;lastFirebaseOkAt=0;lastConnectedAt=0;lastPrincipalPresence=null;}
- const [probe,presNow]=await Promise.all([
-   get(db,'/ecosystem_connection/'+encodeURIComponent(systemId),5000),
-   get(CONTROL_DB,'/inventory_heartbeat/principal_status/'+encodeURIComponent(systemId),5000)
- ]);
- const exact=exactRecord(probe,systemId);
- if(exact)lastFirebaseOkAt=now;
- const firebase=!!exact||(!!lastFirebaseOkAt&&now-lastFirebaseOkAt<CONNECTION_GRACE_MS);
+ const now=Date.now(),db=cleanDb(b.db||b.firebaseUrl),sid=validId(systemId||b.systemId||b.branch);
+ if(lastStateDb!==db||lastStateSystem!==sid){lastStateDb=db;lastStateSystem=sid;lastFirebaseOkAt=0;lastConnectedAt=0;lastPrincipalPresence=null;}
+ async function httpProbe(path,timeout=5000){
+   const u=rest(db,path);if(!u)return false;const c=new AbortController(),t=setTimeout(()=>c.abort(),timeout);
+   try{const sep=u.includes('?')?'&':'?';const r=await fetch(u+sep+'mxprobe='+now,{cache:'no-store',signal:c.signal});return r.ok}catch(_e){return false}finally{clearTimeout(t)}
+ }
+ /* La conexión real del visor se determina por una lectura HTTP válida de SU Firebase activa.
+    El contenido puede ser null: HTTP 200 sigue significando que Firebase está accesible. */
+ let firebase=await httpProbe('/viewer_users/'+encodeURIComponent(sid)+'/__mx_connection_probe__',5000);
+ if(!firebase)firebase=await httpProbe('/ecosystem_connection/'+encodeURIComponent(sid),5000);
+ if(firebase)lastFirebaseOkAt=now;
+ else if(lastFirebaseOkAt&&now-lastFirebaseOkAt<CONNECTION_GRACE_MS)firebase=true;
+ const presNow=await get(CONTROL_DB,'/inventory_heartbeat/principal_status/'+encodeURIComponent(sid),4500).catch(()=>null);
  if(presNow&&typeof presNow==='object')lastPrincipalPresence=presNow;
  const pres=(presNow&&typeof presNow==='object')?presNow:lastPrincipalPresence;
  const last=Number(pres?.lastSeenMs)||Date.parse(pres?.lastSeenAt||0)||0;
- const paused=pres?.connectionPaused===true||pres?.remoteDisconnected===true;
- if(paused){lastConnectedAt=0;return{connected:false,principalOnline:false,firebase,paused:true,systemId,lastSeenAt:pres?.lastSeenAt||'',reason:'Sistema Principal desconectado'}}
- const online=!!last&&now-last<ONLINE_MS;
- let connected=firebase&&online;
+ const paused=pres?.connectionPaused===true||pres?.remoteDisconnected===true||pres?.remoteAdminLocked===true;
+ if(paused){lastConnectedAt=0;return{connected:false,principalOnline:false,firebase,paused:true,systemId:sid,lastSeenAt:pres?.lastSeenAt||'',reason:'Sistema Principal desconectado por Administrador'}}
+ const principalOnline=!!last&&now-last<300000;
+ /* Heartbeat ausente o retrasado NO invalida una Firebase que acaba de responder.
+    Esto evita falsos rojos en Safari/móvil y cuando el heartbeat se retrasa. */
+ let connected=!!firebase;
  if(connected)lastConnectedAt=now;
  else if(lastConnectedAt&&now-lastConnectedAt<CONNECTION_GRACE_MS)connected=true;
- return{connected,principalOnline:online,firebase,paused:false,systemId,lastSeenAt:pres?.lastSeenAt||'',stabilized:connected&&!(firebase&&online),reason:connected?(firebase&&online?'Conectado':'Conectado · estabilizando señal'):firebase?'Firebase correcta; esperando señal estable del Sistema Principal':'La Firebase activa publicada no responde'}
+ return{connected,principalOnline,firebase:!!firebase,paused:false,systemId:sid,lastSeenAt:pres?.lastSeenAt||'',heartbeatAvailable:!!last,reason:connected?(principalOnline?'Conectado':'Conectado a Firebase'):'La Firebase activa del Sistema Principal no responde'}
 }
 function boot(){if(bootPromise)return bootPromise;bootPromise=(async()=>{await ensureSystemId();return await resolve(true)})().catch(()=>null);return bootPromise}
 window.mxFixedPrincipalBinding={version:'5.0.0',mode:'STRICT_GITHUB_BASE_SYSTEM_ID',appCode:APP,get systemId(){return systemId},get routeHash(){return routeHash},get baseHash(){return baseHash},read:readBinding,boot,resolve,resolveForActivation,connectionState};
@@ -1919,52 +1925,46 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 <script id="mx-ecosystem-viewer-config-v1010">
 (function(){'use strict';
-if(window.__mxStableConnectivityV100)return;window.__mxStableConnectivityV100=true;
-const HOLD_MS=45000,FAIL_LIMIT=3,MIN_CHECK_MS=7000;
-let stable=null,lastGoodAt=0,failures=0,busy=false,lastCheckAt=0,lastDetail='',lastState=null,paintQueued=false;
+if(window.__mxStableConnectivityV200)return;window.__mxStableConnectivityV200=true;window.__mxStableConnectivityV100=true;
+const HOLD_MS=55000,FAIL_LIMIT=3,MIN_CHECK_MS=7000;
+let stable=null,lastGoodAt=0,truthFailures=0,busy=false,lastCheckAt=0,lastDetail='',lastState=null,paintQueued=false;
 const $=id=>document.getElementById(id);
-function setClass(el,on,off,ok){if(!el)return;const want=ok?on:off;if(on&&el.classList.contains(on)!==!!ok)el.classList.toggle(on,!!ok);if(off&&el.classList.contains(off)===!!ok)el.classList.toggle(off,!ok)}
+function setClass(el,on,off,ok){if(!el)return;if(on)el.classList.toggle(on,!!ok);if(off)el.classList.toggle(off,!ok)}
 function setText(el,value){if(el&&el.textContent!==value)el.textContent=value}
 function paint(ok,detail=''){
  if(ok==null)return;stable=!!ok;lastDetail=detail||lastDetail;
- const html=document.documentElement;const ds=stable?'online':'offline';if(html.dataset.mxStableConnection!==ds)html.dataset.mxStableConnection=ds;
- for(const id of ['connDot','connectionDot','mxConnDot','statusDot']){const e=$(id);if(!e)continue;setClass(e,'ok','bad',stable);if(e.style.background!==(stable?'rgb(34, 197, 94)':'rgb(239, 68, 68)'))e.style.background=stable?'#22c55e':'#ef4444';const lab=stable?'Conectado':'Sin conexión';if(e.title!==lab)e.title=lab;if(e.getAttribute('aria-label')!==lab)e.setAttribute('aria-label',lab)}
- const compact=$('mxCompactStatusV1025');if(compact){setClass(compact,'mx-ok','mx-bad',stable);const lab=stable?'Conectado':'Sin conexión';if(compact.title!==lab)compact.title=lab;if(compact.getAttribute('aria-label')!==lab)compact.setAttribute('aria-label',lab)}
- const fs=$('firebaseStatus');if(fs){setClass(fs,'ok','bad',stable);const lab=stable?'Conectado':'Sin conexión';if(fs.title!==lab)fs.title=lab;if(fs.getAttribute('aria-label')!==lab)fs.setAttribute('aria-label',lab)}
+ const ds=stable?'online':'offline';if(document.documentElement.dataset.mxStableConnection!==ds)document.documentElement.dataset.mxStableConnection=ds;
+ for(const id of ['connDot','connectionDot','mxConnDot','statusDot']){const e=$(id);if(!e)continue;setClass(e,'ok','bad',stable);e.style.background=stable?'#22c55e':'#ef4444';const lab=stable?'Conectado':'Sin conexión';e.title=lab;e.setAttribute('aria-label',lab)}
+ const compact=$('mxCompactStatusV1025');if(compact){setClass(compact,'mx-ok','mx-bad',stable);compact.title=stable?'Conectado':'Sin conexión';compact.setAttribute('aria-label',compact.title)}
+ const fs=$('firebaseStatus');if(fs){setClass(fs,'ok','bad',stable);fs.title=stable?'Conectado':'Sin conexión';fs.setAttribute('aria-label',fs.title)}
  const cp=$('connPill');if(cp){cp.classList.remove('warn');setClass(cp,'ok','bad',stable);setText(cp,stable?'● Conectado':'● Sin conexión')}
  const badge=$('dbBadge');if(badge){setClass(badge,'ok','bad',stable);setText(badge,stable?'Conectado':'Sin conexión')}
- setText($('firebaseStatusText'),stable?'Conectado':'Sin conexión');
- setText($('connText'),stable?'Conectado a Firebase':'Sin conexión a Firebase');
- setText($('connInfo'),stable?'● Conectado':'● Sin conexión');
- setText($('activationConnection'),stable?'● Conectado':'● Sin conexión');
+ setText($('firebaseStatusText'),stable?'Conectado':'Sin conexión');setText($('connText'),stable?'Conectado a Firebase':'Sin conexión a Firebase');setText($('connInfo'),stable?'● Conectado':'● Sin conexión');setText($('activationConnection'),stable?'● Conectado':'● Sin conexión');
  document.querySelectorAll('.conn-dot,.connection-dot').forEach(e=>setClass(e,'ok','bad',stable));
 }
 function schedulePaint(){if(paintQueued||stable==null)return;paintQueued=true;queueMicrotask(()=>{paintQueued=false;paint(stable,lastDetail)})}
-function report(ok,detail='',hard=false,state=null){
+function applyTruth(ok,detail='',hard=false,state=null){
  const now=Date.now();lastState=state||lastState;
- if(ok===true){lastGoodAt=now;failures=0;stable=true}
- else if(hard||navigator.onLine===false||window.mxMaintenancePaused?.()===true||state?.paused===true){failures=FAIL_LIMIT;stable=false}
- else{failures++;if(stable===true&&lastGoodAt&&now-lastGoodAt<HOLD_MS&&failures<FAIL_LIMIT)stable=true;else stable=false}
- paint(stable,detail);
- try{window.dispatchEvent(new CustomEvent('mx-stable-connectivity-state',{detail:{connected:stable,message:detail,state:lastState}}))}catch(_e){}
- return stable;
+ if(ok===true){lastGoodAt=now;truthFailures=0;stable=true}
+ else if(hard||navigator.onLine===false||state?.paused===true||window.mxMaintenancePaused?.()===true){truthFailures=FAIL_LIMIT;stable=false}
+ else{truthFailures++;if(stable===true&&lastGoodAt&&now-lastGoodAt<HOLD_MS&&truthFailures<FAIL_LIMIT)stable=true;else if(truthFailures>=FAIL_LIMIT)stable=false;else if(stable==null)stable=false}
+ paint(stable,detail);try{window.dispatchEvent(new CustomEvent('mx-stable-connectivity-state',{detail:{connected:stable,message:detail,state:lastState}}))}catch(_e){}return stable;
 }
 async function check(force=false){
  const now=Date.now();if(busy||(!force&&now-lastCheckAt<MIN_CHECK_MS))return stable;lastCheckAt=now;
- if(navigator.onLine===false)return report(false,'Sin Internet',true,{connected:false});
- if(window.mxMaintenancePaused?.()===true)return report(false,'Conexión pausada',true,{connected:false,paused:true});
- const api=window.mxFixedPrincipalBinding;if(!api?.connectionState)return report(false,'Vínculo del Sistema Principal no disponible',false,{connected:false});
- busy=true;try{const b=await api.resolve(false).catch(()=>null);if(b)window.mxViewerUnitName=()=>String(b.unitName||b.systemId||'').trim();const st=await api.connectionState();report(!!st?.connected,st?.reason||'',!!st?.paused,st);return stable}catch(e){report(false,String(e?.message||e||'Comprobación temporal sin respuesta'),false,{connected:false});return stable}finally{busy=false}
+ if(navigator.onLine===false)return applyTruth(false,'Sin Internet',true,{connected:false});
+ if(window.mxMaintenancePaused?.()===true)return applyTruth(false,'Conexión pausada',true,{connected:false,paused:true});
+ const api=window.mxFixedPrincipalBinding;if(!api?.connectionState)return applyTruth(false,'Vínculo del Sistema Principal no disponible',false,{connected:false});
+ busy=true;try{const b=await api.resolve(false).catch(()=>null);if(b)window.mxViewerUnitName=()=>String(b.unitName||b.systemId||'').trim();const st=await api.connectionState();return applyTruth(!!st?.connected,st?.reason||'',!!st?.paused,st)}catch(e){return applyTruth(false,String(e?.message||e||'Comprobación temporal sin respuesta'),false,{connected:false})}finally{busy=false}
 }
-window.mxStableConnectionReport=(ok,detail='',hard=false,state=null)=>report(!!ok,detail,hard,state);
+/* Compatibilidad: los módulos antiguos pueden confirmar VERDE, pero una falla local de un módulo
+   no puede pintar ROJO por sí sola. El rojo solo lo decide la comprobación central o una falla dura. */
+window.mxStableConnectionReport=(ok,detail='',hard=false,state=null)=>{if(ok===true)return applyTruth(true,detail,false,state||{connected:true});if(hard===true)return applyTruth(false,detail,true,state||{connected:false});setTimeout(()=>check(true),40);return stable};
 window.mxStableConnectionCheck=(force=false)=>check(!!force);
-window.mxStableConnectionState=()=>({connected:stable,lastGoodAt,failures,detail:lastDetail,state:lastState});
-function observeTargets(){
- const nodes=[];for(const id of ['connDot','connectionDot','mxConnDot','statusDot','mxCompactStatusV1025','firebaseStatus','firebaseStatusText','connPill','dbBadge','connText','connInfo','activationConnection']){const e=$(id);if(e&&!e.dataset.mxStableObserved){e.dataset.mxStableObserved='1';nodes.push(e)}}
- for(const e of nodes)observer.observe(e,{attributes:true,attributeFilter:['class','style','title','aria-label'],childList:true,subtree:true,characterData:true});
-}
+window.mxStableConnectionState=()=>({connected:stable,lastGoodAt,failures:truthFailures,detail:lastDetail,state:lastState});
+function observeTargets(){const nodes=[];for(const id of ['connDot','connectionDot','mxConnDot','statusDot','mxCompactStatusV1025','firebaseStatus','firebaseStatusText','connPill','dbBadge','connText','connInfo','activationConnection']){const e=$(id);if(e&&!e.dataset.mxStableObserved){e.dataset.mxStableObserved='1';nodes.push(e)}}for(const e of nodes)observer.observe(e,{attributes:true,attributeFilter:['class','style','title','aria-label'],childList:true,subtree:true,characterData:true})}
 const observer=new MutationObserver(schedulePaint);
-function boot(){observeTargets();check(true);setTimeout(()=>check(true),1800);setInterval(()=>{observeTargets();check(false)},15000);window.addEventListener('online',()=>setTimeout(()=>check(true),180));window.addEventListener('offline',()=>report(false,'Sin Internet',true,{connected:false}));window.addEventListener('focus',()=>setTimeout(()=>check(false),150));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(()=>check(true),180)});}
+function boot(){observeTargets();check(true);setTimeout(()=>check(true),1600);setInterval(()=>{observeTargets();check(false)},15000);window.addEventListener('online',()=>setTimeout(()=>check(true),180));window.addEventListener('offline',()=>applyTruth(false,'Sin Internet',true,{connected:false}));window.addEventListener('focus',()=>setTimeout(()=>check(true),180));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')setTimeout(()=>check(true),220)});window.addEventListener('mx-viewer-binding-updated',()=>setTimeout(()=>check(true),120));}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
 </script>
