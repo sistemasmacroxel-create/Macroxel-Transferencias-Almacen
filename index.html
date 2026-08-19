@@ -43,6 +43,9 @@ function deviceId(){const vals=[];for(const fn of ['mxViewerDeviceId','deviceId'
 async function hash(v){const raw=String(v||'');if(!raw)return'';try{if(crypto?.subtle){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(raw));return Array.from(new Uint8Array(b)).slice(0,16).map(x=>x.toString(16).padStart(2,'0')).join('')}}catch(_e){}let h=2166136261;for(let i=0;i<raw.length;i++){h^=raw.charCodeAt(i);h=Math.imul(h,16777619)}return'v'+(h>>>0).toString(16).padStart(8,'0')}
 function branch(){try{const c=window.mxViewerGetCfg?.()||{};return String(c.branch||c.unitId||'HGAM').trim().toUpperCase()||'HGAM'}catch(_e){return'HGAM'}}
 function currentDb(){try{const c=window.mxViewerGetCfg?.()||{};return clean(c.db||c.firebaseUrl||c.currentUrl||c.url)}catch(_e){return''}}
+let approvedDbHost='',approvedSystemId='';
+window.mxApproveOperationalDb=(db,id='')=>{try{const u=new URL(clean(db));if(!/^(?:https:)$/.test(u.protocol))return false;approvedDbHost=u.hostname.toLowerCase();approvedSystemId=String(id||'').trim().toUpperCase();return true}catch(_e){approvedDbHost='';approvedSystemId='';return false}};
+window.mxClearOperationalDbApproval=()=>{approvedDbHost='';approvedSystemId='';return true};
 function viewerUrl(){try{const u=new URL(location.href);u.search='';u.hash='';u.pathname=u.pathname.replace(/\/index\.html$/i,'/');return u.toString()}catch(_e){return String(location.href||'').split(/[?#]/)[0]}}
 function controlUrl(path){const p=String(path||'').startsWith('/')?String(path):'/'+String(path||'');return CONTROL_DB+p+(p.endsWith('.json')?'':'.json')}
 async function cget(path){const r=await priorFetch(controlUrl(path)+'?ts='+now(),{cache:'no-store'});if(!r.ok)return null;return r.json().catch(()=>null)}
@@ -52,7 +55,7 @@ function paused(){return state().paused===true}
 function banner(){let e=document.getElementById('mxMaintenanceStateV123');if(!e){e=document.createElement('div');e.id='mxMaintenanceStateV123';e.textContent='🛠 MANTENIMIENTO · CONEXIÓN DE DATOS PAUSADA POR ADMINISTRADOR';document.body.appendChild(e)}return e}
 function applyState(next){const before=paused();try{sessionStorage.setItem(STATE_KEY,JSON.stringify(next||{paused:false}))}catch(_e){}const on=next?.paused===true;document.documentElement.dataset.mxMaintenance=on?'1':'0';if(!on)delete document.documentElement.dataset.mxMaintenance;banner();if(before!==on)try{window.dispatchEvent(new CustomEvent('mx-maintenance-changed',{detail:{paused:on,reason:String(next?.reason||'')}}))}catch(_e){}}
 window.mxMaintenancePaused=paused;
-window.fetch=function(input,init){try{const raw=typeof input==='string'?input:input?.url;if(paused()&&raw){const u=new URL(raw,location.href),isDb=/firebaseio\.com$|firebasedatabase\.app$/i.test(u.hostname);if(isDb&&u.hostname!==LICENSE_HOST&&u.hostname!==CONTROL_HOST)return Promise.resolve(new Response(JSON.stringify({error:'maintenance',message:'Conexión pausada por Administrador'}),{status:503,statusText:'Maintenance',headers:{'Content-Type':'application/json'}}))}}catch(_e){}return priorFetch(input,init)};
+window.fetch=function(input,init){try{const raw=typeof input==='string'?input:input?.url;if(raw){const u=new URL(raw,location.href),host=u.hostname.toLowerCase(),isDb=/firebaseio\.com$|firebasedatabase\.app$/i.test(host);if(isDb&&host!==LICENSE_HOST&&host!==CONTROL_HOST){if(paused())return Promise.resolve(new Response(JSON.stringify({error:'maintenance',message:'Conexión pausada por Administrador'}),{status:503,statusText:'Maintenance',headers:{'Content-Type':'application/json'}}));if(!approvedDbHost||host!==approvedDbHost)return Promise.resolve(new Response(JSON.stringify({error:'binding_required',message:'Firebase operativa no autorizada para esta ruta'}),{status:409,statusText:'Binding Required',headers:{'Content-Type':'application/json'}}))}}}catch(_e){}return priorFetch(input,init)};
 let busy=false,lastPresence=0;
 async function tick(force=false){if(busy)return;busy=true;try{const d=deviceId();if(!d)return;const sid=String(window.mxFixedPrincipalBinding?.systemId||'').trim().toUpperCase();if(!sid)return;const key=await hash(d+'|'+APP_CODE+'|'+sid),ctl=await cget('/ecosystem_connection/device_control/'+encodeURIComponent(key)).catch(()=>null);const next={paused:ctl?.paused===true,reason:String(ctl?.reason||''),updatedAt:String(ctl?.updatedAt||''),token:String(ctl?.token||'')};applyState(next);if(force||now()-lastPresence>20000){const db=currentDb(),routeHash=await hash(db);await cpatch('/inventory_heartbeat/visor_presence/'+encodeURIComponent(key),{appCode:APP_CODE,branch:sid,unitName:String(window.mxViewerUnitName?.()||''),deviceType:coarseDevice(),lastSeenAt:new Date().toISOString(),lastSeenMs:now(),routeHash,routeMode:'PRODUCTION',viewerVersion:'1.0.00',connectionPaused:next.paused===true,maintenanceReason:next.paused?next.reason:'',controlVersion:'1.0.00'}).catch(()=>{});lastPresence=now()}}finally{busy=false}}
 function boot(){banner();tick(true).catch(()=>{});setInterval(()=>tick(false).catch(()=>{}),15000);window.addEventListener('online',()=>tick(true).catch(()=>{}));document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')tick(true).catch(()=>{})})}
@@ -1889,8 +1892,45 @@ function applyViewer(id,db='',unitName=''){const sid=validId(id),url=cleanDb(db)
 let systemId='',routeHash='',baseHash='',bootPromise=null,lastFirebaseOkAt=0,lastConnectedAt=0,lastPrincipalPresence=null,lastStateDb='',lastStateSystem='';
 async function routeAssociation(){const sig=routeSignature();if(!sig)return null;routeHash=await sha256(sig);const r=await get(CONTROL_DB,'/ecosystem_connection/route_bindings/'+encodeURIComponent(routeHash),6500);if(!r||typeof r!=='object'||txt(r.appCode).toUpperCase()!==APP)return null;const id=validId(r.systemId||r.unitId||r.branch);return id?{systemId:id,source:'RUTA_GITHUB_EXACTA'}:null}
 async function baseAssociation(){const sig=githubBaseSignature();if(!sig)return null;baseHash=await sha256(sig);const r=await get(CONTROL_DB,'/ecosystem_connection/github_bases/'+encodeURIComponent(baseHash),6500);if(!r||typeof r!=='object')return null;const registered=githubBaseSignature(r.githubBase||r.baseUrl||'');if(registered&&registered!==sig)return null;const id=validId(r.systemId||r.unitId||r.branch);return id?{systemId:id,source:'BASE_GITHUB_DEL_SISTEMA'}:null}
-async function ensureSystemId(){if(systemId)return systemId;const q=queryId();if(q){systemId=q;saveBinding({schemaVersion:5,mode:'STRICT_GITHUB_BASE_SYSTEM_ID',appCode:APP,systemId,branch:systemId,githubBase:githubBaseSignature(),routeSignature:routeSignature(),db:'',firebaseUrl:'',boundAt:new Date().toISOString(),updatedAt:new Date().toISOString(),source:'ABIERTO_DESDE_SISTEMA_PRINCIPAL'});return systemId}const exact=await routeAssociation().catch(()=>null);const assoc=exact||await baseAssociation().catch(()=>null);if(assoc?.systemId){systemId=assoc.systemId;const prev=readBinding();saveBinding({...(prev||{}),schemaVersion:5,mode:'STRICT_GITHUB_BASE_SYSTEM_ID',appCode:APP,systemId,branch:systemId,githubBase:githubBaseSignature(),routeSignature:routeSignature(),routeHash,baseHash,boundAt:prev?.boundAt||new Date().toISOString(),updatedAt:new Date().toISOString(),source:assoc.source});return systemId}const local=readBinding();if(local?.systemId){systemId=validId(local.systemId);routeHash=txt(local.routeHash);baseHash=txt(local.baseHash);return systemId}return''}
-async function resolve(force=false){await ensureSystemId();if(!systemId)return null;const prev=readBinding(),raw=await get(CONTROL_DB,'/ecosystem_connection/'+encodeURIComponent(systemId),6500),rec=exactRecord(raw,systemId);if(!rec){if(prev?.systemId===systemId&&cleanDb(prev.db||prev.firebaseUrl)){applyViewer(systemId,prev.db||prev.firebaseUrl,prev.unitName||'');return{...prev,source:'CACHE_MISMO_SISTEMA_SIN_REGISTRO_CENTRAL'}}return{...(prev||{}),schemaVersion:5,mode:'STRICT_GITHUB_BASE_SYSTEM_ID',appCode:APP,systemId,branch:systemId,githubBase:githubBaseSignature(),routeSignature:routeSignature(),db:'',firebaseUrl:'',unitName:prev?.unitName||'',updatedAt:new Date().toISOString(),source:'REGISTRO_EXACTO_NO_DISPONIBLE'}}const changed=!prev||validId(prev.systemId)!==rec.systemId||cleanDb(prev.db||prev.firebaseUrl)!==rec.db||txt(prev.unitName)!==txt(rec.unitName);const next={...(prev||{}),schemaVersion:5,mode:'STRICT_GITHUB_BASE_SYSTEM_ID',appCode:APP,systemId:rec.systemId,branch:rec.systemId,githubBase:githubBaseSignature(),routeSignature:routeSignature(),routeHash:routeHash||prev?.routeHash||'',baseHash:baseHash||prev?.baseHash||await sha256(githubBaseSignature()),db:rec.db,firebaseUrl:rec.db,unitName:rec.unitName,boundAt:prev?.boundAt||new Date().toISOString(),updatedAt:new Date().toISOString(),source:force?'FIREBASE_ACTIVA_ACTUALIZADA':'FIREBASE_ACTIVA_PUBLICADA'};saveBinding(next);const cfgChanged=applyViewer(rec.systemId,rec.db,rec.unitName);if(changed||cfgChanged){try{window.dispatchEvent(new CustomEvent('mx-viewer-binding-updated',{detail:{systemId:rec.systemId,db:rec.db,unitName:rec.unitName,githubBase:next.githubBase}}));window.dispatchEvent(new CustomEvent('mx-viewer-refresh-now',{detail:{source:'BINDING_V5'}}))}catch(_e){}}return next}
+async function clearUntrustedBinding(source='RUTA_NO_ASOCIADA'){
+  try{window.mxClearOperationalDbApproval?.()}catch(_e){}
+  const previous=viewerCfg();
+  try{window.mxViewerSaveCfg?.({db:'',branch:txt(previous.branch||previous.unitId||''),unitName:txt(previous.unitName||'')},false)}catch(_e){}
+  try{localStorage.removeItem(KEY)}catch(_e){}
+  systemId='';routeHash='';baseHash='';
+  return{schemaVersion:6,mode:'STRICT_LIVE_ROUTE_SYSTEM_ID',appCode:APP,systemId:'',branch:'',db:'',firebaseUrl:'',source,updatedAt:new Date().toISOString()};
+}
+async function ensureSystemId(){
+ const previousSystemId=systemId;
+ const q=queryId();
+ const exact=await routeAssociation().catch(()=>null),base=await baseAssociation().catch(()=>null);
+ if(exact?.systemId&&base?.systemId&&exact.systemId!==base.systemId){await clearUntrustedBinding('CONFLICTO_RUTA_BASE');return''}
+ const assoc=exact||base;
+ if(!assoc?.systemId){await clearUntrustedBinding('RUTA_GITHUB_NO_ASOCIADA');return''}
+ if(q&&q!==assoc.systemId){await clearUntrustedBinding('ID_URL_NO_COINCIDE_CON_RUTA');return''}
+ if(previousSystemId&&previousSystemId!==assoc.systemId){try{window.mxClearOperationalDbApproval?.()}catch(_e){}}
+ systemId=assoc.systemId;
+ const prev=readBinding();
+ saveBinding({...(prev||{}),schemaVersion:6,mode:'STRICT_LIVE_ROUTE_SYSTEM_ID',appCode:APP,systemId,branch:systemId,githubBase:githubBaseSignature(),routeSignature:routeSignature(),routeHash,baseHash,boundAt:prev?.boundAt||new Date().toISOString(),updatedAt:new Date().toISOString(),source:assoc.source});
+ return systemId;
+}
+async function resolve(force=false){
+ await ensureSystemId();
+ if(!systemId)return null;
+ const prev=readBinding(),raw=await get(CONTROL_DB,'/ecosystem_connection/'+encodeURIComponent(systemId),6500),rec=exactRecord(raw,systemId);
+ if(!rec){
+   try{window.mxClearOperationalDbApproval?.()}catch(_e){}
+   applyViewer(systemId,'',prev?.unitName||'');
+   const blank={...(prev||{}),schemaVersion:6,mode:'STRICT_LIVE_ROUTE_SYSTEM_ID',appCode:APP,systemId,branch:systemId,githubBase:githubBaseSignature(),routeSignature:routeSignature(),routeHash:routeHash||prev?.routeHash||'',baseHash:baseHash||prev?.baseHash||'',db:'',firebaseUrl:'',unitName:prev?.unitName||'',updatedAt:new Date().toISOString(),source:'SIN_FIREBASE_ACTIVA_PUBLICADA'};
+   saveBinding(blank);return blank;
+ }
+ try{window.mxApproveOperationalDb?.(rec.db,rec.systemId)}catch(_e){}
+ const changed=!prev||validId(prev.systemId)!==rec.systemId||cleanDb(prev.db||prev.firebaseUrl)!==rec.db||txt(prev.unitName)!==txt(rec.unitName);
+ const next={...(prev||{}),schemaVersion:6,mode:'STRICT_LIVE_ROUTE_SYSTEM_ID',appCode:APP,systemId:rec.systemId,branch:rec.systemId,githubBase:githubBaseSignature(),routeSignature:routeSignature(),routeHash:routeHash||prev?.routeHash||'',baseHash:baseHash||prev?.baseHash||await sha256(githubBaseSignature()),db:rec.db,firebaseUrl:rec.db,unitName:rec.unitName,boundAt:prev?.boundAt||new Date().toISOString(),updatedAt:new Date().toISOString(),source:force?'FIREBASE_ACTIVA_VALIDADA':'FIREBASE_ACTIVA_PUBLICADA'};
+ saveBinding(next);const cfgChanged=applyViewer(rec.systemId,rec.db,rec.unitName);
+ if(changed||cfgChanged){try{window.dispatchEvent(new CustomEvent('mx-viewer-binding-updated',{detail:{systemId:rec.systemId,db:rec.db,unitName:rec.unitName,githubBase:next.githubBase}}));window.dispatchEvent(new CustomEvent('mx-viewer-refresh-now',{detail:{source:'BINDING_V6_STRICT'}}))}catch(_e){}}
+ return next;
+}
 async function resolveForActivation(){const b=await resolve(true);return b?{branch:b.systemId,db:cleanDb(b.db||b.firebaseUrl),unitName:b.unitName||''}:{branch:systemId,db:'',unitName:''}}
 async function connectionState(){
  const b=await resolve(false);
@@ -1923,7 +1963,7 @@ async function connectionState(){
  return{connected,principalOnline,firebase:!!firebase,paused:false,systemId:sid,lastSeenAt:pres?.lastSeenAt||'',heartbeatAvailable:!!last,reason:connected?(principalOnline?'Conectado':'Conectado a Firebase'):'La Firebase activa del Sistema Principal no responde'}
 }
 function boot(){if(bootPromise)return bootPromise;bootPromise=(async()=>{await ensureSystemId();return await resolve(true)})().catch(()=>null);return bootPromise}
-window.mxFixedPrincipalBinding={version:'5.0.0',mode:'STRICT_GITHUB_BASE_SYSTEM_ID',appCode:APP,get systemId(){return systemId},get routeHash(){return routeHash},get baseHash(){return baseHash},read:readBinding,boot,resolve,resolveForActivation,connectionState};
+window.mxFixedPrincipalBinding={version:'6.0.0',mode:'STRICT_LIVE_ROUTE_SYSTEM_ID',appCode:APP,get systemId(){return systemId},get routeHash(){return routeHash},get baseHash(){return baseHash},read:readBinding,boot,resolve,resolveForActivation,connectionState};
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,0),{once:true});else setTimeout(boot,0);window.addEventListener('online',()=>setTimeout(()=>{bootPromise=null;boot()},120));
 })();
 </script>
